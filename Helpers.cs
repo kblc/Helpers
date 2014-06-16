@@ -11,7 +11,7 @@ namespace Helpers
 {
     public static class Log
     {
-        internal class SessionInfo
+        internal class SessionInfo : IDisposable
         {
             public DateTime SessionStart = DateTime.Now;
             public string SessionName = string.Empty;
@@ -38,6 +38,12 @@ namespace Helpers
                 {
                     return log ?? (log = new List<string>());
                 }
+            }
+
+            public void Dispose()
+            {
+                if (log != null)
+                    log.Clear();
             }
         }
 
@@ -84,26 +90,18 @@ namespace Helpers
                 {
                     if (writeThisBlock)
                     {
+                        var logMessages = 
+                            new string[] { 
+                                "##########################################################",
+                                string.Format("### {0}", Sessions[session].SessionName)
+                            }
+                            .Union(Sessions[session].Log.ToArray())
+                            .Union(new string[] { 
+                                "##########################################################" 
+                            })
+                            .ToArray();
 
-                        lock (consoleLogLock)
-                        {
-                            Console.WriteLine("##########################################################");
-                            Console.WriteLine(string.Format("### {0}", Sessions[session].SessionName));
-                            foreach (string line in Sessions[session].Log)
-                                Console.WriteLine(line);
-                            Console.WriteLine("##########################################################");
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(LogFileName))
-                            lock (fileLogLock)
-                                using (StreamWriter w = File.AppendText(LogFilePath))
-                                {
-                                    w.WriteLine("##########################################################");
-                                    w.WriteLine(string.Format("### {0}", Sessions[session].SessionName));
-                                    foreach(string line in Sessions[session].Log)
-                                        w.WriteLine(line);
-                                    w.WriteLine("##########################################################");
-                                }
+                        WriteToLogOutput(logMessages);
                     }
                     Sessions[session].Log.Clear();
                 }
@@ -142,6 +140,27 @@ namespace Helpers
             return message;
         }
 
+        private static void WriteToLogOutput(string[] strings)
+        {
+            lock (consoleLogLock)
+            {
+                foreach (var str in strings)
+                    Console.WriteLine(str);
+            }
+            //start /B /wait ????.exe > out.txt & type out.txt
+            if (!string.IsNullOrWhiteSpace(LogFileName))
+                lock (fileLogLock)
+                    using (StreamWriter w = File.AppendText(LogFilePath))
+                    {
+                        foreach (var str in strings)
+                            w.WriteLine(str);
+                    }
+        }
+
+        public static void Add(string logMessage, string whereCathed)
+        {
+            Add(string.Format(WhereCatchedFormat, whereCathed, logMessage));
+        }
         public static void Add(Guid session, string logMessage)
         {
             bool isBlock;
@@ -154,17 +173,7 @@ namespace Helpers
                 }
             else
             {
-                lock (consoleLogLock)
-                { 
-                    Console.WriteLine(logMessage);
-                }
-                //start /B /wait ????.exe > out.txt & type out.txt
-                if (!string.IsNullOrWhiteSpace(LogFileName))
-                    lock (fileLogLock)
-                        using (StreamWriter w = File.AppendText(LogFilePath))
-                        {
-                            w.WriteLine(logMessage);
-                        }
+                WriteToLogOutput(new string[] { logMessage });
             }
         }
 
@@ -178,6 +187,11 @@ namespace Helpers
             Add(ex.GetExceptionText());
         }
 
+        public static void Add(Exception ex, string whereCathed)
+        {
+            Add(string.Format(WhereCatchedFormat, whereCathed, ex.GetExceptionText()));
+        }
+
         public static void Clear()
         {
             if (!string.IsNullOrEmpty(LogFileName) && File.Exists(LogFilePath))
@@ -185,7 +199,7 @@ namespace Helpers
                     File.Delete(LogFilePath);
         }
 
-        public static string GetExceptionText(this Exception ex, string whereCathched = null)
+        public static string GetExceptionText(this Exception ex, string whereCathed = null)
         {
             if (ex == null)
                 return string.Empty;
@@ -203,8 +217,8 @@ namespace Helpers
             }
             result += string.Format("{0}{1}{0}", Environment.NewLine, ex.StackTrace);
 
-            if (whereCathched != null)
-                result = string.Format(WhereCatchedFormat, whereCathched, result);
+            if (whereCathed != null)
+                result = string.Format(WhereCatchedFormat, whereCathed, result);
 
             return result;
         }
