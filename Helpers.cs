@@ -49,6 +49,15 @@ namespace Helpers
         public static string LogFileName = string.Empty;
         private static object fileLogLock = new Object();
 
+        private static string currentPath = null;
+        public static string CurrentPath
+        {
+            get
+            {
+                return currentPath ?? (currentPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+            }
+        }
+
         public static Guid SessionStart(string sessionName, bool isBlockInfo = false)
         {
             Guid result = Guid.NewGuid();
@@ -66,7 +75,7 @@ namespace Helpers
                 {
                     if (writeThisBlock && !string.IsNullOrWhiteSpace(LogFileName))
                         lock (fileLogLock)
-                            using (StreamWriter w = File.AppendText(Environment.CurrentDirectory + Path.DirectorySeparatorChar + LogFileName))
+                            using (StreamWriter w = File.AppendText(Path.Combine(CurrentPath, LogFileName)))
                             {
                                 w.WriteLine("##########################################################");
                                 w.WriteLine(string.Format("### {0}", Sessions[session].SessionName));
@@ -131,7 +140,7 @@ namespace Helpers
                 //start /B /wait ????.exe > out.txt & type out.txt
                 if (!string.IsNullOrWhiteSpace(LogFileName))
                     lock (fileLogLock)
-                        using (StreamWriter w = File.AppendText(Environment.CurrentDirectory + Path.DirectorySeparatorChar + LogFileName))
+                        using (StreamWriter w = File.AppendText(Path.Combine(CurrentPath, LogFileName)))
                         {
                             w.WriteLine(logMessage);
                         }
@@ -150,9 +159,9 @@ namespace Helpers
 
         public static void Clear()
         {
-            if (!string.IsNullOrEmpty(LogFileName) && File.Exists(Environment.CurrentDirectory + Path.DirectorySeparatorChar + LogFileName))
+            if (!string.IsNullOrEmpty(LogFileName) && File.Exists(Path.Combine(CurrentPath, LogFileName)))
                 lock (fileLogLock)
-                    File.Delete(Environment.CurrentDirectory + Path.DirectorySeparatorChar + LogFileName);
+                    File.Delete(Path.Combine(CurrentPath, LogFileName));
         }
 
         public static string GetExceptionText(this Exception ex, string whereCathched = null)
@@ -348,6 +357,7 @@ namespace Helpers
             }
             catch (Exception ex)
             {
+                Log.Add(ex.GetExceptionText("Helpers.Extensions.StringLikes()"));
                 return false;
             }
         }
