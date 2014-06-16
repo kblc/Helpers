@@ -52,11 +52,33 @@ namespace Helpers
 
         private const string WhereCatchedFormat = "{0} :: {1}";
 
-        public static string LogFileName = string.Empty;
+        private static string logFileName = string.Empty;
+        
+        /// <summary>
+        /// Get or Set log file name. <i>Log file located in current assembly directory</i>
+        /// </summary>
+        public static string LogFileName
+        {
+            get
+            {
+                return logFileName;
+            }
+            set
+            {
+                string newValue = string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+                if (logFileName == newValue)
+                    return;
+                logFileName = newValue;
+            }
+        }
+
         private static object fileLogLock = new Object();
         private static object consoleLogLock = new Object();
 
         private static string currentPath = null;
+        /// <summary>
+        /// Get current assembly path
+        /// </summary>
         public static string CurrentPath
         {
             get
@@ -65,6 +87,9 @@ namespace Helpers
             }
         }
 
+        /// <summary>
+        /// Get full log file path
+        /// </summary>
         public static string LogFilePath
         {
             get
@@ -113,6 +138,7 @@ namespace Helpers
         {
             Add(Guid.Empty, logMessage);
         }
+        
         public static void AddWithCatcher(string whereCathched, string logMessage)
         {
             Add(Guid.Empty, string.Format(WhereCatchedFormat, whereCathched, logMessage));
@@ -161,6 +187,7 @@ namespace Helpers
         {
             Add(string.Format(WhereCatchedFormat, whereCathed, logMessage));
         }
+
         public static void Add(Guid session, string logMessage)
         {
             bool isBlock;
@@ -192,6 +219,9 @@ namespace Helpers
             Add(string.Format(WhereCatchedFormat, whereCathed, ex.GetExceptionText()));
         }
 
+        /// <summary>
+        /// Clear (remove) log file
+        /// </summary>
         public static void Clear()
         {
             if (!string.IsNullOrEmpty(LogFileName) && File.Exists(LogFilePath))
@@ -224,8 +254,14 @@ namespace Helpers
         }
     }
 
+    /// <summary>
+    /// Class to calculate percentage progress for many values
+    /// </summary>
     public class PercentageProgress
     {
+        /// <summary>
+        /// Event arguments for percentage progress change events
+        /// </summary>
         public class PercentageProgressEventArgs : EventArgs
         {
             public PercentageProgressEventArgs() { }
@@ -234,6 +270,9 @@ namespace Helpers
                 Value = value;
             }
 
+            /// <summary>
+            /// Current percentage progress value
+            /// </summary>
             public readonly float Value = 0;
         }
 
@@ -243,6 +282,10 @@ namespace Helpers
         private List<PercentageProgress> childs = new List<PercentageProgress>();
 
         private float value = 0;
+        
+        /// <summary>
+        /// Get or set current percentage value for this part (from 0 to 100)
+        /// </summary>
         public float Value
         {
             get
@@ -254,31 +297,50 @@ namespace Helpers
             {
                 bool needRaise = false;
 
+                if (value > 100 || value < 0)
+                    throw new ArgumentException("Значение должно быть в диапазоне от 0 до 100");
+
                 lock (childLocks)
                     if (childs.Count == 0)
                     {
-                        if (value > 100 || value < 0)
-                            throw new ArgumentException("Значение должно быть в диапазоне от 0 до 100");
-
+                        needRaise = this.value != value;
                         this.value = value;
-                        needRaise = true;
                     }
                     else
                     {
-                        foreach (var c in childs)
-                            c.value = value;
+                        lockRaise = true;
+                        try
+                        { 
+                            foreach (var c in childs)
+                            { 
+                                needRaise = needRaise || (c.value != value);
+                                c.value = value;
+                            }
+                        }
+                        finally
+                        {
+                            lockRaise = false;
+                        }
                     }
 
                 if (needRaise)
                     RaiseChange();
-                //    throw new ArgumentException("Нельзя задать значения для элемента, у которого есть наследники");
             }
         }
+        
+        /// <summary>
+        /// Get if current part has child
+        /// </summary>
         public bool HasChilds
         {
             get { lock(childLocks) return childs.Count > 0; }
         }
 
+        /// <summary>
+        /// Get new child with default value
+        /// </summary>
+        /// <param name="value">Percentage value for new child</param>
+        /// <returns>Child with default value for this item</returns>
         public PercentageProgress GetChild(float value = 0)
         {
             PercentageProgress result = new PercentageProgress() { Value = value };
@@ -291,6 +353,10 @@ namespace Helpers
             return result;
         }
 
+        /// <summary>
+        /// Remove child
+        /// </summary>
+        /// <param name="child">Child to remove</param>
         public void RemoveChild(PercentageProgress child)
         {
             lock (childLocks)
@@ -307,12 +373,16 @@ namespace Helpers
             RaiseChange();
         }
 
+        private bool lockRaise = false;
         private void RaiseChange()
         {
-            if (Change != null)
+            if (Change != null && !lockRaise)
                 Change(this, new PercentageProgressEventArgs(Value));
         }
 
+        /// <summary>
+        /// Occurs when a property Value changes
+        /// </summary>
         public event EventHandler<PercentageProgressEventArgs> Change;
     }
 
@@ -321,7 +391,7 @@ namespace Helpers
         private class RaiseItem
         {
             public string PropertyName;
-            public string[] AfterPropertyNames;
+            public string[] WhenPropertyNames;
         }
 
         #region Property changed
@@ -329,31 +399,50 @@ namespace Helpers
         private List<RaiseItem> afterItems = new List<RaiseItem>();
         private List<RaiseItem> beforeItems = new List<RaiseItem>();
 
+        /// <summary>
+        /// Occurs when a property value changes
+        /// </summary>
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void RaisePropertyChange(string propertyName)
         {
             if (PropertyChanged != null)
             {
-                foreach (var item in beforeItems)
-                    if (item.AfterPropertyNames.Contains(propertyName))
-                        RaisePropertyChange(item.PropertyName);
-                    
+                foreach (var item in beforeItems.Where(bI => bI.WhenPropertyNames.Any(wP => propertyName.Like(wP))))
+                    RaisePropertyChange(item.PropertyName);
 
+                //foreach (var item in beforeItems)
+                //    if (item.WhenPropertyNames.Contains(propertyName))
+                //        RaisePropertyChange(item.PropertyName);
+                    
                 PropertyChanged(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 
-                foreach (var item in afterItems)
-                    if (item.AfterPropertyNames.Contains(propertyName))
-                        RaisePropertyChange(item.PropertyName);
+                foreach (var item in afterItems.Where(bI => bI.WhenPropertyNames.Any(wP => propertyName.Like(wP))))
+                    RaisePropertyChange(item.PropertyName);
+
+                //foreach (var item in afterItems)
+                //    if (item.WhenPropertyNames.Contains(propertyName))
+                //        RaisePropertyChange(item.PropertyName);
             }
         }
+        /// <summary>
+        /// Manage to raise property <b>propertyName</b> before any of <b>afterPropertyNames</b> raised
+        /// </summary>
+        /// <param name="afterPropertyNames">Array of property to wath.<br/><i>Can be mask like "*Value"</i></param>
+        /// <param name="propertyName">Property name to raise</param>
         protected void RaisePropertyAfterChange(string[] afterPropertyNames, string propertyName)
         {
-            afterItems.Add(new RaiseItem() { PropertyName = propertyName, AfterPropertyNames = afterPropertyNames });
+            afterItems.Add(new RaiseItem() { PropertyName = propertyName, WhenPropertyNames = afterPropertyNames });
         }
+
+        /// <summary>
+        /// Manage to raise property <b>propertyName</b> after any of <b>afterPropertyNames</b> raised
+        /// </summary>
+        /// <param name="afterPropertyNames">Array of property to wath.<br/><i>Can be mask like "*Value"</i></param>
+        /// <param name="propertyName">Property name to raise</param>
         protected void RaisePropertyBeforeChange(string[] beforePropertyNames, string propertyName)
         {
-            beforeItems.Add(new RaiseItem() { PropertyName = propertyName, AfterPropertyNames = beforePropertyNames });
+            beforeItems.Add(new RaiseItem() { PropertyName = propertyName, WhenPropertyNames = beforePropertyNames });
         }
 
         #endregion
@@ -375,16 +464,30 @@ namespace Helpers
             return source.GroupBy(keySelector).Select(grp => grp.First());
         }
 
-        public static bool Like(this string strVal, string mask, bool ignoreCase = true)
+        /// <summary>
+        /// Check similarity for string and mask (RegEx used)
+        /// </summary>
+        /// <param name="source">Source string</param>
+        /// <param name="mask">Mask<br/><i>Should be like <b>test*mask*</b> or other</i></param>
+        /// <param name="ignoreCase">Ignore case for string and mask while checking</param>
+        /// <returns>Return true if source string like mask</returns>
+        public static bool Like(this string source, string mask, bool ignoreCase = true)
         {
-            return StringLikes(strVal, mask, ignoreCase);
+            return StringLikes(source, mask, ignoreCase);
         }
 
-        public static bool StringLikes(string source, string arguments, bool ignoreCase = true)
+        /// <summary>
+        /// Check similarity for string and mask (RegEx used)
+        /// </summary>
+        /// <param name="source">Source string</param>
+        /// <param name="mask">Mask<br/><i>Should be like <b>test*mask*</b> or other</i></param>
+        /// <param name="ignoreCase">Ignore case for string and mask while checking</param>
+        /// <returns>Return true if source string like mask</returns>
+        public static bool StringLikes(string source, string mask, bool ignoreCase = true)
         {
             try
             {
-                string str = "^" + Regex.Escape(arguments);
+                string str = "^" + Regex.Escape(mask);
                 str = str.Replace("\\*", ".*").Replace("\\?", ".") + "$";
 
                 bool result = (Regex.IsMatch(source, str, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None));
@@ -397,11 +500,23 @@ namespace Helpers
             }
         }
 
+        /// <summary>
+        /// Check object is Design mode now
+        /// </summary>
+        /// <param name="obj">Source object</param>
+        /// <returns>Returns true if object is in design mode now</returns>
         public static bool IsDesignMode(this object obj)
         {
             return System.ComponentModel.DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject());
         }
 
+        /// <summary>
+        /// Copy object properties from selected item to destination object. <br/>Object can be <b>not similar</b> types.
+        /// </summary>
+        /// <typeparam name="fromType">Type of source object</typeparam>
+        /// <typeparam name="toType">Type of destination object</typeparam>
+        /// <param name="from">Source object</param>
+        /// <param name="to">Destincation object</param>
         public static void CopyObject<fromType, toType>(this fromType from, toType to)
         {
             if (from == null || to == null)
