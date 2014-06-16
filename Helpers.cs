@@ -48,6 +48,7 @@ namespace Helpers
 
         public static string LogFileName = string.Empty;
         private static object fileLogLock = new Object();
+        private static object consoleLogLock = new Object();
 
         private static string currentPath = null;
         public static string CurrentPath
@@ -55,6 +56,14 @@ namespace Helpers
             get
             {
                 return currentPath ?? (currentPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+            }
+        }
+
+        public static string LogFilePath
+        {
+            get
+            {
+                return !string.IsNullOrWhiteSpace(LogFileName) ? Path.Combine(CurrentPath, LogFileName) : string.Empty;
             }
         }
 
@@ -73,16 +82,29 @@ namespace Helpers
             {
                 if (Sessions[session].IsBlockInfo)
                 {
-                    if (writeThisBlock && !string.IsNullOrWhiteSpace(LogFileName))
-                        lock (fileLogLock)
-                            using (StreamWriter w = File.AppendText(Path.Combine(CurrentPath, LogFileName)))
-                            {
-                                w.WriteLine("##########################################################");
-                                w.WriteLine(string.Format("### {0}", Sessions[session].SessionName));
-                                foreach(string line in Sessions[session].Log)
-                                    w.WriteLine(line);
-                                w.WriteLine("##########################################################");
-                            }
+                    if (writeThisBlock)
+                    {
+
+                        lock (consoleLogLock)
+                        {
+                            Console.WriteLine("##########################################################");
+                            Console.WriteLine(string.Format("### {0}", Sessions[session].SessionName));
+                            foreach (string line in Sessions[session].Log)
+                                Console.WriteLine(line);
+                            Console.WriteLine("##########################################################");
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(LogFileName))
+                            lock (fileLogLock)
+                                using (StreamWriter w = File.AppendText(LogFilePath))
+                                {
+                                    w.WriteLine("##########################################################");
+                                    w.WriteLine(string.Format("### {0}", Sessions[session].SessionName));
+                                    foreach(string line in Sessions[session].Log)
+                                        w.WriteLine(line);
+                                    w.WriteLine("##########################################################");
+                                }
+                    }
                     Sessions[session].Log.Clear();
                 }
                 Sessions.Remove(session);
@@ -131,16 +153,15 @@ namespace Helpers
                     Sessions[session].Log.Add(logMessage);
                 }
             else
-            { 
-#if DEBUG
-                Trace.WriteLine(logMessage);
-#else
-                Console.WriteLine(logMessage);
-#endif
+            {
+                lock (consoleLogLock)
+                { 
+                    Console.WriteLine(logMessage);
+                }
                 //start /B /wait ????.exe > out.txt & type out.txt
                 if (!string.IsNullOrWhiteSpace(LogFileName))
                     lock (fileLogLock)
-                        using (StreamWriter w = File.AppendText(Path.Combine(CurrentPath, LogFileName)))
+                        using (StreamWriter w = File.AppendText(LogFilePath))
                         {
                             w.WriteLine(logMessage);
                         }
@@ -159,9 +180,9 @@ namespace Helpers
 
         public static void Clear()
         {
-            if (!string.IsNullOrEmpty(LogFileName) && File.Exists(Path.Combine(CurrentPath, LogFileName)))
+            if (!string.IsNullOrEmpty(LogFileName) && File.Exists(LogFilePath))
                 lock (fileLogLock)
-                    File.Delete(Path.Combine(CurrentPath, LogFileName));
+                    File.Delete(LogFilePath);
         }
 
         public static string GetExceptionText(this Exception ex, string whereCathched = null)
