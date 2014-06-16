@@ -357,7 +357,7 @@ namespace Helpers
             return System.ComponentModel.DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject());
         }
 
-        public static void CopyObject<fromType, toType>(fromType from, toType to)
+        public static void CopyObject<fromType, toType>(this fromType from, toType to)
         {
             if (from == null || to == null)
                 return;
@@ -365,15 +365,16 @@ namespace Helpers
             var piToItems = typeof(toType).GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public).Where(pi => pi.CanWrite).ToArray();
             var piFromItems = typeof(fromType).GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public).ToArray();
 
-            foreach(var piTo in piToItems)
+            foreach (var piTo in piToItems)
             {
                 var piFrom = piFromItems.FirstOrDefault(p => p.Name == piTo.Name);
                 if (piFrom != null)
                 {
                     object value = piFrom.GetValue(from, null);
                     if (value == null)
-                        piTo.SetValue(to, value, null); else
-                        piTo.SetValue(to, System.Convert.ChangeType(value, piTo.PropertyType), null); 
+                        piTo.SetValue(to, value, null);
+                    else
+                        piTo.SetValue(to, System.Convert.ChangeType(value, piTo.PropertyType), null);
                 }
             }
         }
