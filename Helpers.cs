@@ -240,8 +240,8 @@ namespace Helpers
             {
                 result += 
                     (string.IsNullOrWhiteSpace(result))
-                    ? string.Format("exception '{1}' occured; Source: '{2}';", Environment.NewLine, innerEx.Message, innerEx.Source)
-                    : string.Format("{0}inner exception '{1}' occured; Source: '{2}';", Environment.NewLine, innerEx.Message, innerEx.Source);
+                    ?                       string.Format("exception '{0}' occured; Source: '{1}';", innerEx.Message, innerEx.Source)
+                    : Environment.NewLine + string.Format("inner exception '{0}' occured; Source: '{1}';", innerEx.Message, innerEx.Source);
 
                 innerEx = innerEx.InnerException;
             }
