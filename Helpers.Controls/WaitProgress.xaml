@@ -1,0 +1,152 @@
+﻿<UserControl x:Class="Helpers.Controls.WaitProgress"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:helpers="clr-namespace:Helpers.Converters;assembly=Helpers"
+             xmlns:converters="clr-namespace:Helpers.Controls.Converters"
+             DataContext="{Binding RelativeSource={RelativeSource Self}}"
+             mc:Ignorable="d" 
+             d:DesignWidth="100" d:DesignHeight="100">
+    <Grid>
+        <Grid.Resources>
+            <helpers:ApplyConverter x:Key="ApplyConverter"/>
+            <converters:SetAlphaToColorConverter x:Key="SetAlphaToColorConverter"/>
+        </Grid.Resources>
+        <Viewbox x:Name="AnimationViewBox">
+            <Canvas Width="100" Height="100" Name="canvas">
+                <Canvas.RenderTransform>
+                    <RotateTransform Angle="0" CenterX="50" CenterY="50" />
+                </Canvas.RenderTransform>
+                <Canvas.Triggers>
+                    <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                        <EventTrigger.Actions>
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="canvas" Storyboard.TargetProperty="(Canvas.RenderTransform).(RotateTransform.Angle)" To="360" Duration="0:0:4" By="45"  RepeatBehavior="Forever" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger.Actions>
+                    </EventTrigger>
+                </Canvas.Triggers>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="12" Height="12" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#26}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="0" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="12" Height="12" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#3F}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="30" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="12" Height="12" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#59}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="60" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="12" Height="12" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#62}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="90" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="13" Height="13" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#66}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="120" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="13" Height="13" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#66}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="150" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="13" Height="13" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#8C}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="180" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="13" Height="13" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#92}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="210" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="14" Height="14" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#BF}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="240" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="14" Height="14" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#C4}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="270" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="14" Height="14" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#D8}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="300" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Rectangle Canvas.Top="2" Canvas.Left="50" Width="15" Height="15" Fill="{Binding Color, Converter={StaticResource SetAlphaToColorConverter}, ConverterParameter=#FF}">
+                    <Rectangle.RenderTransform>
+                        <TransformGroup>
+                            <SkewTransform AngleX="-30" AngleY="-10"/>
+                            <RotateTransform Angle="330" CenterX="00" CenterY="46"/>
+                        </TransformGroup>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+            </Canvas>
+        </Viewbox>
+        <Label
+           HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Visibility="{Binding Path=PercentageVisible}"
+            Padding="0"
+            >
+            <TextBlock>
+                <TextBlock.Style>
+                    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                        <Setter Property="Text" Value="{Binding Percentage, StringFormat={}{0:000}%}"/>
+                        <Setter Property="FontSize" Value="{Binding ElementName=AnimationViewBox, Path=ActualWidth, Converter={StaticResource ApplyConverter}, ConverterParameter=/4;3}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=PercentageFractionalPartVisible}" Value="True">
+                                <Setter Property="Text" Value="{Binding Percentage, StringFormat={}{0:000.00}%}" />
+                                <Setter Property="FontSize" Value="{Binding ElementName=AnimationViewBox, Path=ActualWidth, Converter={StaticResource ApplyConverter}, ConverterParameter=/6;3}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Label>
+    </Grid>
+</UserControl>

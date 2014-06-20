@@ -9,6 +9,8 @@ namespace Helpers.Converters
 {
     public class ApplyConverter : IValueConverter
     {
+        private enum ApplyAction { Division, Multiplication, Subtraction, Addition };
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             double curVal = (double)value;
@@ -17,9 +19,51 @@ namespace Helpers.Converters
             {
                 var items = paramline.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
                 double add;
-                if (items.Length > 0 && double.TryParse(items[0], out add))
+
+                string item0 = items[0];
+                ApplyAction action = ApplyAction.Addition;
+
+                if (item0.Length > 0)
                 {
-                    curVal += add;
+                    if (item0[0] == '-')
+                    { 
+                        action = ApplyAction.Subtraction;
+                        item0 = item0.Substring(1);
+                    }
+                    else if (item0[0] == '*')
+                    {
+                        action = ApplyAction.Multiplication;
+                        item0 = item0.Substring(1);
+                    }
+                    else if (item0[0] == '/')
+                    {
+                        action = ApplyAction.Division;
+                        item0 = item0.Substring(1);
+                    }
+                    else if (item0[0] == '+')
+                    {
+                        action = ApplyAction.Addition;
+                        item0 = item0.Substring(1);
+                    }
+                }
+
+                if (items.Length > 0 && double.TryParse(item0, out add))
+                {
+                    switch(action)
+                    {
+                        case(ApplyAction.Addition):
+                            curVal += add;
+                            break;
+                        case (ApplyAction.Subtraction):
+                            curVal -= add;
+                            break;
+                        case (ApplyAction.Division):
+                            curVal /= add;
+                            break;
+                        case (ApplyAction.Multiplication):
+                            curVal *= add;
+                            break;
+                    }
 
                     double min;
                     if (items.Length > 1 && double.TryParse(items[1], out min))
