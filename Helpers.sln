@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers.Controls", "Helpers
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers.Controls.Test", "Helpers.Controls.Test\Helpers.Controls.Test.csproj", "{1A38E66A-7F42-40B9-8FE2-68CCC80A2169}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers.Test", "..\Helpers.Test\Helpers.Test.csproj", "{B8D029C2-D49C-4666-BD3F-2C7AB50FCA6C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers.Test", "Helpers.Test\Helpers.Test.csproj", "{B8D029C2-D49C-4666-BD3F-2C7AB50FCA6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
