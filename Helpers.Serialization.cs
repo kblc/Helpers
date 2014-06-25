@@ -8,8 +8,14 @@ using System.Text;
 
 namespace Helpers.Serialization
 {
+    /// <summary>
+    /// Interface for deserialization for objects
+    /// </summary>
     public interface ISerializable
     {
+        /// <summary>
+        /// Invoke after deserialization ends
+        /// </summary>
         void OnDeserialized();
     }
 
@@ -88,6 +94,14 @@ namespace Helpers.Serialization
             return result;
         }
 
+        /// <summary>
+        /// Deserialization byte array to selected object. <i>Using: typeof(item).DeserializeFromBytes(...)</i>
+        /// </summary>
+        /// <typeparam name="type">Object type</typeparam>
+        /// <param name="typeOfObject">Object type</param>
+        /// <param name="bytes">Byte array to deserialization</param>
+        /// <param name="compressed">Is stream was compressed</param>
+        /// <param name="result">Deserializated object</param>
         public static void DeserializeFromBytes<type>(this Type typeOfObject, byte[] bytes, bool compressed, out type result)
         {
             CheckTypeForInterfaceImplementation(typeOfObject);
@@ -109,12 +123,27 @@ namespace Helpers.Serialization
             }
         }
 
+        /// <summary>
+        /// Deserialization base64 string to selected object. <i>Using: typeof(item).DeserializeFromBase64(...)</i>
+        /// </summary>
+        /// <typeparam name="type">Object type</typeparam>
+        /// <param name="typeOfObject">Object type</param>
+        /// <param name="base64String">Base64 string to deserialization</param>
+        /// <param name="compressed">Is stream was compressed</param>
+        /// <param name="result">Deserializated object</param>
         public static void DeserializeFromBase64<type>(this Type typeOfObject, string base64String, bool compressed, out type result)
         {
             var bytes = System.Convert.FromBase64String(base64String);
             DeserializeFromBytes<type>(typeOfObject, bytes, compressed, out result);
         }
 
+        /// <summary>
+        /// Deserialization XML string to selected object. <i>Using: typeof(item).DeserializeFromXML(...)</i>
+        /// </summary>
+        /// <typeparam name="type">Object type</typeparam>
+        /// <param name="typeOfObject">Object type</param>
+        /// <param name="xml">Xml string to deserialization</param>
+        /// <param name="result">Deserializated object</param>
         public static void DeserializeFromXML<type>(this Type typeOfObject, string xml, out type result)
         {
             CheckTypeForInterfaceImplementation(typeOfObject);
