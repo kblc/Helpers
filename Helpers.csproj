@@ -76,6 +76,7 @@
     <Compile Include="Converters\ReverseBooleanToVisibilityConverter.cs" />
     <Compile Include="DelegateCommand.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="Helpers.Serialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

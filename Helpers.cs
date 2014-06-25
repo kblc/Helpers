@@ -448,7 +448,7 @@ namespace Helpers
         #endregion
     }
 
-    public static class Extensions
+    public static partial class Extensions
     {
         public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
         {
