@@ -9,11 +9,11 @@ namespace Helpers
 {
     public class ObservableCollectionEx<T> : ObservableCollection<T>
     {
-        // Override the event so this class can access it
         public override event System.Collections.Specialized.NotifyCollectionChangedEventHandler CollectionChanged;
 
         protected override void OnCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
+            if (!supressNotifications)
             // Be nice - use BlockReentrancy like MSDN said
             using (BlockReentrancy())
             {
@@ -36,6 +36,45 @@ namespace Helpers
                         handler(this, e);
                 }
             }
+        }
+
+        protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (!supressNotifications)
+                base.OnPropertyChanged(e);
+        }
+
+        private bool supressNotifications = false;
+
+        /// <summary>
+        /// Add items range to collection
+        /// </summary>
+        /// <param name="items">Items to add</param>
+        /// <exception cref="ArgumentNullException">Items cannot be null</exception>
+        public void AddRange(IEnumerable<T> items)
+        {
+            if (items == null) throw new ArgumentNullException("items");
+            this.CheckReentrancy();
+            int startingIndex = this.Count;
+
+            supressNotifications = true;
+            try
+            { 
+                foreach (var item in items)
+                    this.Items.Add(item);
+            }
+            finally
+            {
+                supressNotifications = false;
+            }
+            this.OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Count"));
+            this.OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Item[]"));
+
+            var changedItems = new List<T>(items);
+            this.OnCollectionChanged(
+                new System.Collections.Specialized.NotifyCollectionChangedEventArgs(
+                        System.Collections.Specialized.NotifyCollectionChangedAction.Add, changedItems, startingIndex
+                    ));
         }
     }
 }
