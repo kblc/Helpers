@@ -5,6 +5,9 @@ using System.Xml.Serialization;
 
 namespace Helpers.Test
 {
+    [XmlRoot("SerializationClass")]
+    public class SerializationFakeClassEx : SerializationFakeClass { }
+
     [Serializable]
     [XmlInclude(typeof(SerializationFakeClass))]
     [XmlRoot("SerializationClass")]
@@ -69,6 +72,20 @@ namespace Helpers.Test
             Assert.AreEqual(obj.FakeInt == outObj.FakeInt, true);
         }
 
+        private void SerializationXMLExTest()
+        {
+            SerializationFakeClassEx obj = new SerializationFakeClassEx();
+            obj.FakeInt = 2;
+            //var xmlString = obj.SerializeToXML();
+            var xmlString = Helpers.Serialization.Extensions.SerializeToXML(obj);
+
+            Console.WriteLine(xmlString);
+
+            SerializationFakeClassEx outObj;
+            typeof(SerializationFakeClassEx).DeserializeFromXML(xmlString, out outObj);
+            Assert.AreEqual(obj.FakeInt == outObj.FakeInt, true);
+        }
+
         [TestMethod]
         public void SerializationBytesCompressed()
         {
@@ -97,6 +114,12 @@ namespace Helpers.Test
         public void SerializationXML()
         {
             SerializationXMLTest();
+        }
+
+        [TestMethod]
+        public void SerializationXMLEx()
+        {
+            SerializationXMLExTest();
         }
     }
 }

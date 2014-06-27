@@ -79,24 +79,26 @@ namespace Helpers.Serialization
         /// </summary>
         /// <typeparam name="type">Type of object to serialize</typeparam>
         /// <param name="source">Object to serialize</param>
-        /// <param name="omit">Is XML result omited</param>
+        /// <param name="clean">Is XML result clean</param>
         /// <returns>XML string of object serialization</returns>
-        public static string SerializeToXML<type>(this type source, bool omit = true)
+        public static string SerializeToXML(this object source, bool clean = true)
         {
             XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
             ns.Add("", "");
 
-            CheckTypeForInterfaceImplementation(source.GetType());
+            Type sourceType = source.GetType();
+
+            CheckTypeForInterfaceImplementation(sourceType);
 
             string result = string.Empty;
 
-            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(type));
+            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(sourceType);
             using (MemoryStream stream = new MemoryStream())
             {
                 XmlWriterSettings settings = new XmlWriterSettings()
                 {
-                    Indent = false,
-                    OmitXmlDeclaration = omit,
+                    Indent = !clean,
+                    OmitXmlDeclaration = true,
                     Encoding = Encoding.UTF8
                 };
                 XmlWriter writer = XmlWriter.Create(stream, settings);
