@@ -519,11 +519,30 @@ namespace Helpers
         /// <param name="to">Destincation object</param>
         public static void CopyObject<fromType, toType>(this fromType from, toType to)
         {
+            CopyObject<fromType, toType>(from, to, new string[] { });
+        }
+
+        /// <summary>
+        /// Copy object properties from selected item to destination object. <br/>Object can be <b>not similar</b> types.
+        /// </summary>
+        /// <typeparam name="fromType">Type of source object</typeparam>
+        /// <typeparam name="toType">Type of destination object</typeparam>
+        /// <param name="from">Source object</param>
+        /// <param name="to">Destincation object</param>
+        public static void CopyObject<fromType, toType>(this fromType from, toType to, string[] excludePropertyes)
+        {
             if (from == null || to == null)
                 return;
 
-            var piToItems = typeof(toType).GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public).Where(pi => pi.CanWrite).ToArray();
-            var piFromItems = typeof(fromType).GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public).ToArray();
+            var piToItems = 
+                typeof(toType)
+                .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+                .Where(pi => pi.CanWrite && !excludePropertyes.Any(ep => pi.Name.Like(ep) ))
+                .ToArray();
+            var piFromItems = 
+                typeof(fromType)
+                .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+                .ToArray();
 
             foreach (var piTo in piToItems)
             {
