@@ -77,6 +77,7 @@
     <Compile Include="DelegateCommand.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Helpers.Serialization.cs" />
+    <Compile Include="ObservableCollectionEx.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

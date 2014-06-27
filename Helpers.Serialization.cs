@@ -5,6 +5,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace Helpers.Serialization
 {
@@ -77,9 +79,13 @@ namespace Helpers.Serialization
         /// </summary>
         /// <typeparam name="type">Type of object to serialize</typeparam>
         /// <param name="source">Object to serialize</param>
+        /// <param name="omit">Is XML result omited</param>
         /// <returns>XML string of object serialization</returns>
-        public static string SerializeToXML<type>(this type source)
+        public static string SerializeToXML<type>(this type source, bool omit = true)
         {
+            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+            ns.Add("", "");
+
             CheckTypeForInterfaceImplementation(source.GetType());
 
             string result = string.Empty;
@@ -87,7 +93,17 @@ namespace Helpers.Serialization
             System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(type));
             using (MemoryStream stream = new MemoryStream())
             {
-                s.Serialize(stream, source);
+                XmlWriterSettings settings = new XmlWriterSettings()
+                {
+                    Indent = false,
+                    OmitXmlDeclaration = omit,
+                    Encoding = Encoding.UTF8
+                };
+                XmlWriter writer = XmlWriter.Create(stream, settings);
+
+                s.Serialize(writer, source, ns);
+
+                //s.Serialize(stream, source, ns);
                 stream.Seek(0, SeekOrigin.Begin);
                 result = Encoding.UTF8.GetString(stream.GetBuffer(), 0, (int)stream.Length);
             }
