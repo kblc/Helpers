@@ -5,6 +5,7 @@ using System.Xml.Serialization;
 
 namespace Helpers.Test
 {
+    [Serializable]
     [XmlRoot("SerializationClass")]
     public class SerializationFakeClassEx : SerializationFakeClass { }
 
@@ -31,6 +32,21 @@ namespace Helpers.Test
     {
         private void  SerializationBytesTest(bool compressed)
         {
+            SerializationFakeClassEx obj = new SerializationFakeClassEx();
+            obj.FakeInt = 2;
+            var bytes = obj.SerializeToBytes(compressed);
+
+            Console.WriteLine("Bytes array length: {0}", bytes.Length);
+            Console.WriteLine("Bytes: {0}", bytes);
+
+            SerializationFakeClassEx outObj;
+            typeof(SerializationFakeClassEx).DeserializeFromBytes(bytes, compressed, out outObj);
+
+            Assert.AreEqual(obj.FakeInt == outObj.FakeInt, true);
+        }
+
+        private void SerializationBytesExTest(bool compressed)
+        {
             SerializationFakeClass obj = new SerializationFakeClass();
             obj.FakeInt = 2;
             var bytes = obj.SerializeToBytes(compressed);
@@ -55,6 +71,21 @@ namespace Helpers.Test
 
             SerializationFakeClass outObj;
             typeof(SerializationFakeClass).DeserializeFromBase64(base64String, compressed, out outObj);
+
+            Assert.AreEqual(obj.FakeInt == outObj.FakeInt, true);
+        }
+
+        private void SerializationByesBase64ExTest(bool compressed)
+        {
+            SerializationFakeClassEx obj = new SerializationFakeClassEx();
+            obj.FakeInt = 2;
+            var base64String = obj.SerializeToBase64(compressed);
+
+            Console.WriteLine("String length: {0}", base64String.Length);
+            Console.WriteLine("String: {0}", base64String);
+
+            SerializationFakeClassEx outObj;
+            typeof(SerializationFakeClassEx).DeserializeFromBase64(base64String, compressed, out outObj);
 
             Assert.AreEqual(obj.FakeInt == outObj.FakeInt, true);
         }
@@ -99,6 +130,18 @@ namespace Helpers.Test
         }
 
         [TestMethod]
+        public void SerializationBytesExCompressed()
+        {
+            SerializationBytesExTest(true);
+        }
+
+        [TestMethod]
+        public void SerializationBytesExDecompressed()
+        {
+            SerializationBytesExTest(false);
+        }
+
+        [TestMethod]
         public void SerializationBase64Compressed()
         {
             SerializationByesBase64Test(true);
@@ -108,6 +151,18 @@ namespace Helpers.Test
         public void SerializationBase64Decompressed()
         {
             SerializationByesBase64Test(false);
+        }
+
+        [TestMethod]
+        public void SerializationBase64ExCompressed()
+        {
+            SerializationByesBase64ExTest(true);
+        }
+
+        [TestMethod]
+        public void SerializationBase64ExDecompressed()
+        {
+            SerializationByesBase64ExTest(false);
         }
 
         [TestMethod]
