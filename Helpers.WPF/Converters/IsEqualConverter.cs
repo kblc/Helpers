@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Data;
 
-namespace Helpers.Converters
+namespace Helpers.WPF.Converters
 {
     public class IsEqualsConverter : IValueConverter
     {

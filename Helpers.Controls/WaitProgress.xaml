@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:helpers="clr-namespace:Helpers.Converters;assembly=Helpers"
+             xmlns:helpers="clr-namespace:Helpers.WPF.Converters;assembly=Helpers.WPF"
              xmlns:converters="clr-namespace:Helpers.Controls.Converters"
              DataContext="{Binding RelativeSource={RelativeSource Self}}"
              mc:Ignorable="d" 

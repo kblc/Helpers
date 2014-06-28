@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers.Controls.Test", "He
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers.Test", "Helpers.Test\Helpers.Test.csproj", "{B8D029C2-D49C-4666-BD3F-2C7AB50FCA6C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers.WPF", "Helpers.WPF\Helpers.WPF.csproj", "{B6ADC69E-8B71-42B6-B5C8-EBC090522939}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{B8D029C2-D49C-4666-BD3F-2C7AB50FCA6C}.Release|x64.Build.0 = Release|x64
 		{B8D029C2-D49C-4666-BD3F-2C7AB50FCA6C}.Release|x86.ActiveCfg = Release|x86
 		{B8D029C2-D49C-4666-BD3F-2C7AB50FCA6C}.Release|x86.Build.0 = Release|x86
+		{B6ADC69E-8B71-42B6-B5C8-EBC090522939}.Debug|x64.ActiveCfg = Debug|x64
+		{B6ADC69E-8B71-42B6-B5C8-EBC090522939}.Debug|x64.Build.0 = Debug|x64
+		{B6ADC69E-8B71-42B6-B5C8-EBC090522939}.Debug|x86.ActiveCfg = Debug|x86
+		{B6ADC69E-8B71-42B6-B5C8-EBC090522939}.Debug|x86.Build.0 = Debug|x86
+		{B6ADC69E-8B71-42B6-B5C8-EBC090522939}.Release|x64.ActiveCfg = Release|x64
+		{B6ADC69E-8B71-42B6-B5C8-EBC090522939}.Release|x64.Build.0 = Release|x64
+		{B6ADC69E-8B71-42B6-B5C8-EBC090522939}.Release|x86.ActiveCfg = Release|x86
+		{B6ADC69E-8B71-42B6-B5C8-EBC090522939}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

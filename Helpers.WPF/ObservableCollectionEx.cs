@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Threading;
 
-namespace Helpers
+namespace Helpers.WPF
 {
     public class ObservableCollectionEx<T> : ObservableCollection<T>
     {
