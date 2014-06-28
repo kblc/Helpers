@@ -113,7 +113,7 @@
       <Project>{5fef6c64-7c23-47d3-925e-19cbe9ddd131}</Project>
       <Name>Helpers.Controls</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Helpers.csproj">
+    <ProjectReference Include="..\Helpers\Helpers.csproj">
       <Project>{c46731b0-690f-4747-9bb7-b08ae61e24eb}</Project>
       <Name>Helpers</Name>
     </ProjectReference>

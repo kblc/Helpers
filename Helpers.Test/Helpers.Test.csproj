@@ -78,7 +78,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Helpers.csproj">
+    <ProjectReference Include="..\Helpers\Helpers.csproj">
       <Project>{c46731b0-690f-4747-9bb7-b08ae61e24eb}</Project>
       <Name>Helpers</Name>
     </ProjectReference>
