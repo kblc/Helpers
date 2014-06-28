@@ -21,7 +21,7 @@ namespace Helpers.Test
 
         [XmlAttribute("FakeInt")]
         public int FakeInt { get; set; }
-        public void OnDeserialized()
+        public virtual void OnDeserialized()
         {
             Console.WriteLine("ISerializable.OnDeserialized(): serialization done");
         }
