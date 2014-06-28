@@ -32,6 +32,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
     <DebugSymbols>true</DebugSymbols>
+    <DocumentationFile>bin\x86\Release\Helpers.Controls.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
