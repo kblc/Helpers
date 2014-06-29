@@ -176,5 +176,21 @@ namespace Helpers.Test
         {
             SerializationXMLExTest();
         }
+
+        [TestMethod]
+        public void SerializationCompressedDecompressString()
+        {
+            string testString = "testString";
+
+            for (int i = 0; i < 10; i++)
+                testString += testString;
+
+            Console.WriteLine("String for test length: {0}", testString.Length);
+            byte[] compressedString = testString.CompressToBytes();
+            Console.WriteLine("Compressed string size: '{0}'", compressedString.Length);
+            string decompressedString = compressedString.DecompressFromBytes();
+            Console.WriteLine("Decompressed string length: {0}", decompressedString.Length);
+            Assert.AreEqual(testString, decompressedString);
+        }
     }
 }

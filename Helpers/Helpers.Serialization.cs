@@ -21,30 +21,24 @@ namespace Helpers.Serialization
         void OnDeserialized();
     }
 
+    /// <summary>
+    /// Extensions for serialization methods
+    /// </summary>
     public static partial class Extensions
     {
-        private static void CheckTypeForInterfaceImplementation(Type typeOfObject)
-        {
-            if (typeOfObject.GetInterface(typeof(ISerializable).Name) == null)
-                throw new Exception("This object not implement Helpers.Serialization.ISerializable interface");
-        }
-
         /// <summary>
         /// Serialize this current object to byte array
         /// </summary>
-        /// <typeparam name="type">Type of object to serialize</typeparam>
         /// <param name="source">Object to serialize</param>
         /// <param name="compressed">Use GZip compression</param>
         /// <returns>Byte array of serialized object</returns>
-        public static byte[] SerializeToBytes<type>(this type source, bool compressed)
+        public static byte[] SerializeToBytes(this object source, bool compressed)
         {
-            CheckTypeForInterfaceImplementation(source.GetType());
-
             byte[] result = new byte[] { };
             using (var stream = new MemoryStream())
             {
                 var formatter = new BinaryFormatter();
-                formatter.Serialize(stream, (type)source);
+                formatter.Serialize(stream, source);
                 if (compressed)
                     using (MemoryStream compressedStream = new MemoryStream())
                     {
@@ -64,11 +58,10 @@ namespace Helpers.Serialization
         /// <summary>
         /// Serialize this current object to Base64 string
         /// </summary>
-        /// <typeparam name="type">Type of object to serialize</typeparam>
         /// <param name="source">Object to serialize</param>
         /// <param name="compressed">Use GZip compression</param>
         /// <returns>Base64 string of object serialization</returns>
-        public static string SerializeToBase64<type>(this type source, bool compressed)
+        public static string SerializeToBase64(this object source, bool compressed)
         {
             var bytes = SerializeToBytes(source, compressed);
             return System.Convert.ToBase64String(bytes);
@@ -77,7 +70,6 @@ namespace Helpers.Serialization
         /// <summary>
         /// Serialize this current object to XML string
         /// </summary>
-        /// <typeparam name="type">Type of object to serialize</typeparam>
         /// <param name="source">Object to serialize</param>
         /// <param name="clean">Is XML result clean</param>
         /// <returns>XML string of object serialization</returns>
@@ -86,13 +78,9 @@ namespace Helpers.Serialization
             XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
             ns.Add("", "");
 
-            Type sourceType = source.GetType();
-
-            CheckTypeForInterfaceImplementation(sourceType);
-
             string result = string.Empty;
 
-            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(sourceType);
+            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(source.GetType());
             using (MemoryStream stream = new MemoryStream())
             {
                 XmlWriterSettings settings = new XmlWriterSettings()
@@ -101,13 +89,12 @@ namespace Helpers.Serialization
                     OmitXmlDeclaration = true,
                     Encoding = Encoding.UTF8
                 };
-                XmlWriter writer = XmlWriter.Create(stream, settings);
-
-                s.Serialize(writer, source, ns);
-
-                //s.Serialize(stream, source, ns);
-                stream.Seek(0, SeekOrigin.Begin);
-                result = Encoding.UTF8.GetString(stream.GetBuffer(), 0, (int)stream.Length);
+                using(XmlWriter writer = XmlWriter.Create(stream, settings))
+                { 
+                    s.Serialize(writer, source, ns);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    result = Encoding.UTF8.GetString(stream.GetBuffer(), 0, (int)stream.Length);
+                }
             }
             return result;
         }
@@ -122,8 +109,6 @@ namespace Helpers.Serialization
         /// <param name="result">Deserializated object</param>
         public static void DeserializeFromBytes<type>(this Type typeOfObject, byte[] bytes, bool compressed, out type result)
         {
-            CheckTypeForInterfaceImplementation(typeOfObject);
-
             object res = null;
             using (var compressedStream = new MemoryStream(bytes))
             {
@@ -134,10 +119,11 @@ namespace Helpers.Serialization
                 } else
                     res = (new BinaryFormatter()).Deserialize(compressedStream);
 
-                CheckTypeForInterfaceImplementation(res.GetType());
-
                 result = (type)res;
-                (result as ISerializable).OnDeserialized();
+
+                ISerializable iResult = result as ISerializable;
+                if (iResult != null)
+                    iResult.OnDeserialized();
             }
         }
 
@@ -164,18 +150,54 @@ namespace Helpers.Serialization
         /// <param name="result">Deserializated object</param>
         public static void DeserializeFromXML<type>(this Type typeOfObject, string xml, out type result)
         {
-            CheckTypeForInterfaceImplementation(typeOfObject);
-
             using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml)))
             {
                 System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeOfObject);
                 var res = s.Deserialize(stream);
 
-                CheckTypeForInterfaceImplementation(res.GetType());
-
                 result = (type)res;
-                (result as ISerializable).OnDeserialized();
+
+                ISerializable iResult = result as ISerializable;
+                if (iResult != null)
+                    iResult.OnDeserialized();
             }
+        }
+
+
+        /// <summary>
+        /// Compress current string to bytes using GZip
+        /// </summary>
+        /// <param name="source">String to compress</param>
+        /// <returns>Compressed byte array</returns>
+        public static byte[] CompressToBytes(this string source)
+        {
+            byte[] result = Encoding.UTF8.GetBytes(source);
+            using (var stream = new MemoryStream(result))
+            using (MemoryStream compressedStream = new MemoryStream())
+            {
+                using (GZipStream compressionStream = new GZipStream(compressedStream, CompressionMode.Compress))
+                {
+                    stream.Seek(0, SeekOrigin.Begin);
+                    stream.CopyTo(compressionStream);
+                }
+                result = compressedStream.ToArray();
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Decompress byte array to string
+        /// </summary>
+        /// <param name="source">Source byte array</param>
+        /// <returns>Decompressed string</returns>
+        public static string DecompressFromBytes(this byte[] source)
+        {
+            string result = string.Empty;
+            using (var compressedStream = new MemoryStream(source))
+            using (var decompressStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+            using (StreamReader reader = new StreamReader(decompressStream, Encoding.UTF8))
+                result = reader.ReadToEnd();       
+            return result;
         }
     }
 }
