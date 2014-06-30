@@ -18,7 +18,7 @@ namespace Helpers.WPF.Converters
             var logSession = Log.SessionStart(string.Format("Helpers.WPF.Converters.ApplyConverter.Convert(value:'{0}', targetType:'{1}', parameter:'{2}')", value, targetType.Name, parameter), true);
             try
             {
-                double curVal = (double)value;
+                double curVal = double.Parse(value.ToString());
                 string paramline = parameter as string;
                 if (!string.IsNullOrEmpty(paramline))
                 {
@@ -99,6 +99,7 @@ namespace Helpers.WPF.Converters
             catch(Exception ex)
             {
                 wasException = true;
+                Log.Add(logSession, ex);
                 throw ex;
             }
             finally

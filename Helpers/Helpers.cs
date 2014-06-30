@@ -68,8 +68,34 @@ namespace Helpers
                 string newValue = string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
                 if (logFileName == newValue)
                     return;
-                logFileName = newValue;
+
+                if (Touch(newValue))
+                    logFileName = newValue;
             }
+        }
+
+        private static bool Touch(string newValue)
+        {
+            if (string.IsNullOrWhiteSpace(newValue))
+                return true;
+
+            bool result = false;
+            string newLogPath = Path.Combine(CurrentPath, newValue);
+            lock (fileLogLock)
+                try
+                {
+                    using (StreamWriter w = File.AppendText(newLogPath))
+                    {
+                        bool isBlock;
+                        w.WriteLine(GetFullLogMessage(Guid.Empty, string.Format("Log started at file '{0}'", newLogPath), out isBlock));
+                        result = true;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    WriteToLogOutput(new string[] { string.Format("Can''t touch file '{0}':{1}{2}", newLogPath, Environment.NewLine, ex.GetExceptionText()) });
+                }
+            return result;
         }
 
         private static object fileLogLock = new Object();
@@ -117,12 +143,12 @@ namespace Helpers
                     {
                         var logMessages = 
                             new string[] { 
-                                "##########################################################",
+                                "B#########################################################",
                                 string.Format("### {0}", Sessions[session].SessionName)
                             }
                             .Union(Sessions[session].Log.ToArray())
                             .Union(new string[] { 
-                                "##########################################################" 
+                                "E#########################################################" 
                             })
                             .ToArray();
 
