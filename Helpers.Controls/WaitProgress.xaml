@@ -12,6 +12,7 @@
         <Grid.Resources>
             <helpers:ApplyConverter x:Key="ApplyConverter"/>
             <converters:SetAlphaToColorConverter x:Key="SetAlphaToColorConverter"/>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         </Grid.Resources>
         <Viewbox x:Name="AnimationViewBox">
             <Canvas Width="100" Height="100" Name="canvas">
@@ -130,7 +131,7 @@
         <Label
            HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Visibility="{Binding Path=PercentageVisible}"
+            Visibility="{Binding Path=PercentageVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
             Padding="0"
             >
             <TextBlock>

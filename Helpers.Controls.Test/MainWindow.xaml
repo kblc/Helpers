@@ -36,5 +36,13 @@
             <helpersControls:WaitProgress Percentage="100" PercentageFractionalPartVisible="False" Color="Green"/>
             <Label Grid.Column="1" Content="test content for progress (SUCCESS)..." VerticalAlignment="Center"/>
         </Grid>
+        <Grid Height="30">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <helpersControls:WaitProgress PercentageVisible="False" Color="Blue"/>
+            <Label Grid.Column="1" Content="test content without progress (SUCCESS)..." VerticalAlignment="Center"/>
+        </Grid>
     </StackPanel>
 </Window>
