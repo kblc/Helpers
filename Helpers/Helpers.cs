@@ -134,6 +134,12 @@ namespace Helpers
 
         public static void SessionEnd(Guid session, bool writeThisBlock = true)
         {
+            if (!Sessions.ContainsKey(session))
+            {
+                WriteToLogOutput(new string[] { (new Exception(string.Format("Session '{0}' not exists in session dictionary", session.ToString()))).GetExceptionText() });
+                return;
+            }
+
             Add(session, string.Format("elapsed time: {0} ms.", (DateTime.Now - Sessions[session].SessionStart).TotalMilliseconds));
             lock (sessionsLock)
             {
