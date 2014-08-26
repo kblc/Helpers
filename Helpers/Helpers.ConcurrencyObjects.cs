@@ -64,7 +64,7 @@ namespace Helpers
                     { 
                         if (Max == 0 || objectsDictionary.Count < Max)
                         {
-                            result = GetNewObject();
+                            result = GetNewObjectInside();
                             objectsDictionary.TryAdd(result, true);
                         }
                         else
@@ -81,13 +81,18 @@ namespace Helpers
             objectsDictionary.TryUpdate(obj, false, true);
         }
 
-        protected virtual T GetNewObject()
+        protected virtual T GetNewObjectInside()
         {
+            if (GetNewObject != null)
+                return GetNewObject();
+
             T result = default(T);
             var ci = typeof(T).GetConstructor(new Type[] { });
             if (ci != null)
                 result = (T)ci.Invoke(new object[] { });
             return result;
         }
+
+        public Func<T> GetNewObject = null;
     }
 }
