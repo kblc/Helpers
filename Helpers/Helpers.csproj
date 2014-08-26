@@ -70,6 +70,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers.ConcurrencyObjects.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Helpers.Serialization.cs" />
     <Compile Include="PercentageProgress.cs" />
