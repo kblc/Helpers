@@ -6,6 +6,9 @@ using Helpers;
 
 namespace Helpers.WPF
 {
+    /// <summary>
+    /// Base class for implement INotifyPropertyChanged interface
+    /// </summary>
     public class PropertyChangedBase : System.ComponentModel.INotifyPropertyChanged
     {
         private class RaiseItem
@@ -24,6 +27,10 @@ namespace Helpers.WPF
         /// </summary>
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>
+        /// Raise property changed for INotifyPropertyChanged interface
+        /// </summary>
+        /// <param name="propertyName">Property name to raise</param>
         protected virtual void RaisePropertyChange(string propertyName)
         {
             if (PropertyChanged != null)
@@ -58,7 +65,7 @@ namespace Helpers.WPF
         /// <summary>
         /// Manage to raise property <b>propertyName</b> after any of <b>afterPropertyNames</b> raised
         /// </summary>
-        /// <param name="afterPropertyNames">Array of property to wath.<br/><i>Can be mask like "*Value"</i></param>
+        /// <param name="beforePropertyNames">Array of property to wath.<br/><i>Can be mask like "*Value"</i></param>
         /// <param name="propertyName">Property name to raise</param>
         protected void RaisePropertyBeforeChange(string[] beforePropertyNames, string propertyName)
         {

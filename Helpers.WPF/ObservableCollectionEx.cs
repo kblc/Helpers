@@ -7,10 +7,22 @@ using System.Windows.Threading;
 
 namespace Helpers.WPF
 {
+    /// <summary>
+    /// Represents a dynamic data extended collection that provides notifications when items get added, removed, or when the whole list is refreshed.
+    /// Collection extended by: Protected OnCollectionChanged() event, some Range*() methods
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the collection.</typeparam>
     public class ObservableCollectionEx<T> : ObservableCollection<T>
     {
+        /// <summary>
+        /// Occurs when an item is added, removed, changed, moved, or the entire list is refreshed.   
+        /// </summary>
         public override event System.Collections.Specialized.NotifyCollectionChangedEventHandler CollectionChanged;
 
+        /// <summary>
+        /// Raises the System.Collections.ObjectModel.ObservableCollection<T>.CollectionChanged event with the provided arguments.
+        /// </summary>
+        /// <param name="e">Arguments of the event being raised.</param>
         protected override void OnCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             if (!supressNotifications)
@@ -38,6 +50,10 @@ namespace Helpers.WPF
             }
         }
 
+        /// <summary>
+        /// Raises the System.Collections.ObjectModel.ObservableCollection<T>.PropertyChanged event with the provided arguments.
+        /// </summary>
+        /// <param name="e">Arguments of the event being raised.</param>
         protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (!supressNotifications)

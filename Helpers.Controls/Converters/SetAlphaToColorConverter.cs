@@ -8,8 +8,14 @@ using System.Windows.Media;
 
 namespace Helpers.Controls.Converters
 {
+    /// <summary>
+    /// Converter for set alpha for incoming color
+    /// </summary>
     public class SetAlphaToColorConverter : IValueConverter
     {
+        /// <summary>
+        /// Convert this
+        /// </summary>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is System.Windows.Media.Color)
@@ -39,6 +45,9 @@ namespace Helpers.Controls.Converters
             return value;
         }
 
+        /// <summary>
+        /// Not implemented
+        /// </summary>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();

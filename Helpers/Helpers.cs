@@ -348,6 +348,7 @@ namespace Helpers
         /// <typeparam name="toType">Type of destination object</typeparam>
         /// <param name="from">Source object</param>
         /// <param name="to">Destincation object</param>
+        /// <param name="excludePropertyes">Exclude some property names. Items can use LIKE syntax (ex: '*name*' or 'param*')</param>
         public static void CopyObject<fromType, toType>(this fromType from, toType to, string[] excludePropertyes)
         {
             if (from == null || to == null)
