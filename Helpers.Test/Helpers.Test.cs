@@ -32,10 +32,29 @@ namespace Helpers.Test
             bool th1First = false;
 
             ConcurrencyObjects<ConcurrencyTestClass> co = new ConcurrencyObjects<ConcurrencyTestClass>();
-            co.Max = 1;
+            co.Max = 3;
             co.TimeToGetObject = new TimeSpan(0,0,10,0);
             var str1 = co.GetObject();
             str1.testString = "test string 1";
+
+            var str3 = co.GetObject();
+            str3.testString = "test string 3";
+
+            var str4 = co.GetObject();
+            str4.testString = "test string 4";
+
+            co.ReturnObject(str3);
+            co.ReturnObject(str4);
+
+            str3 = co.GetObject();
+            str4 = co.GetObject();
+
+            co.ReturnObject(str3);
+            co.ReturnObject(str4);
+
+            str3 = co.GetObject();
+            str4 = co.GetObject();
+
             var th = new Thread(() =>
             {
                 Console.WriteLine("Wait thread start");
@@ -57,6 +76,9 @@ namespace Helpers.Test
             co.ReturnObject(str2);
             Console.WriteLine("Object (2) returns to list");
             th2End = true;
+
+            co.ReturnObject(str3);
+            co.ReturnObject(str4);
 
             Assert.AreEqual(th1First && th1End && th2End, true);
         }

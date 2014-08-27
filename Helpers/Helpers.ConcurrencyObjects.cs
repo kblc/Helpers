@@ -43,35 +43,30 @@ namespace Helpers
 
             lock(lockGetObject)
             {
-                result = objectsDictionary
-                            .Where(i => i.Value == false)
-                            .Select(i => i.Key)
-                            .FirstOrDefault();
+
+                var dt = DateTime.Now;
+                do
+                {
+                    result = objectsDictionary
+                                .Where(i => i.Value == false)
+                                .Select(i => i.Key)
+                                .FirstOrDefault();
+                    if (result == null)
+                        Thread.Sleep(50);
+                }
+                while (objectsDictionary.Count >= Max && Max > 0 && (dt + timeToGetObject > DateTime.Now) && result == null);
 
                 if (result == null)
-                {
-                    var dt = DateTime.Now;
-                    while (objectsDictionary.Count >= Max && Max > 0 && (dt + timeToGetObject > DateTime.Now) && result == null)
-                    { 
-                        Thread.Sleep(20);
-                        result = objectsDictionary
-                                    .Where(i => i.Value == false)
-                                    .Select(i => i.Key)
-                                    .FirstOrDefault();
+                { 
+                    if (Max == 0 || objectsDictionary.Count < Max)
+                    {
+                        result = GetNewObjectInside();
+                        objectsDictionary.TryAdd(result, true);
                     }
-
-                    if (result == null)
-                    { 
-                        if (Max == 0 || objectsDictionary.Count < Max)
-                        {
-                            result = GetNewObjectInside();
-                            objectsDictionary.TryAdd(result, true);
-                        }
-                        else
-                            throw new Exception(string.Format(@"Can't get object. Time is over."));
-                    } else
-                        objectsDictionary.TryUpdate(result, true, false);
-                }
+                    else
+                        throw new Exception(string.Format(@"Can't get object. Time is over."));
+                } else
+                    objectsDictionary.TryUpdate(result, true, false);
             }
             return result;
         }
