@@ -75,6 +75,9 @@ namespace Helpers.WPF
         #endregion
     }
 
+    /// <summary>
+    /// This extension for some WPF object
+    /// </summary>
     public static partial class Extensions
     {
         /// <summary>
