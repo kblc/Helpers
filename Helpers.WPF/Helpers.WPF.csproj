@@ -69,6 +69,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Converters\IsEqualVisibilityConverter.cs" />
+    <Compile Include="Converters\IsNotEqualVisibilityConverter.cs" />
     <Compile Include="DelegateCommand.cs" />
     <Compile Include="Helpers.WPF.cs" />
     <Compile Include="Converters\ApplyConverter.cs" />
