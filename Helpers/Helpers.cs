@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -376,6 +377,35 @@ namespace Helpers
                         piTo.SetValue(to, System.Convert.ChangeType(value, piTo.PropertyType), null);
                 }
             }
+        }
+
+        /// <summary>
+        /// Get attribute for enumeration value.
+        /// How to use: 
+        /// string description = targetLevel.GetAttributeValue<DescriptionAttribute, string>(x => x.Description);
+        /// </summary>
+        /// <typeparam name="T">Attribute type to select</typeparam>
+        /// <typeparam name="Expected">Expected value type</typeparam>
+        /// <param name="enumeration">Enumeration type</param>
+        /// <param name="expression">Selective expression</param>
+        /// <returns>Attribute value for scpecified enum value</returns>
+        public static Expected GetAttributeValue<T, Expected>(this Enum enumeration, Func<T, Expected> expression)
+        where T : Attribute
+        {
+            T attribute =
+              enumeration
+                .GetType()
+                .GetMember(enumeration.ToString())
+                .Where(member => member.MemberType == MemberTypes.Field)
+                .FirstOrDefault()
+                .GetCustomAttributes(typeof(T), false)
+                .Cast<T>()
+                .SingleOrDefault();
+
+            if (attribute == null)
+                return default(Expected);
+
+            return expression(attribute);
         }
     }
 }
