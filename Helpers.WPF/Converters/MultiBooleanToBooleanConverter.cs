@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Data;
 
-namespace Helpers.WPF
+namespace Helpers.WPF.Converters
 {
     public class MultiBooleanANDToBooleanConverter : IMultiValueConverter
     {

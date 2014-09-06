@@ -21,7 +21,7 @@ namespace Helpers.WPF.Converters
             if (visible)
                 return System.Windows.Visibility.Visible;
             else
-                return System.Windows.Visibility.Hidden;
+                return System.Windows.Visibility.Collapsed;
         }
 
         public object[] ConvertBack(object value,
@@ -48,7 +48,7 @@ namespace Helpers.WPF.Converters
             if (visible)
                 return System.Windows.Visibility.Visible;
             else
-                return System.Windows.Visibility.Hidden;
+                return System.Windows.Visibility.Collapsed;
         }
 
         public object[] ConvertBack(object value,

@@ -79,7 +79,7 @@
     <Compile Include="Converters\IsNotEqualsConverter.cs" />
     <Compile Include="Converters\NullToTrueFalseConverter.cs" />
     <Compile Include="Converters\ReverseBooleanToVisibilityConverter.cs" />
-    <Compile Include="MultiBooleanToBooleanConverter.cs" />
+    <Compile Include="Converters\MultiBooleanToBooleanConverter.cs" />
     <Compile Include="ObservableCollectionEx.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
