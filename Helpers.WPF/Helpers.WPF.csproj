@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="Converters\IsEqualVisibilityConverter.cs" />
     <Compile Include="Converters\IsNotEqualVisibilityConverter.cs" />
+    <Compile Include="Converters\MultiBooleanToVisibilityConverter.cs" />
     <Compile Include="DelegateCommand.cs" />
     <Compile Include="Helpers.WPF.cs" />
     <Compile Include="Converters\ApplyConverter.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="Converters\IsNotEqualsConverter.cs" />
     <Compile Include="Converters\NullToTrueFalseConverter.cs" />
     <Compile Include="Converters\ReverseBooleanToVisibilityConverter.cs" />
+    <Compile Include="MultiBooleanToBooleanConverter.cs" />
     <Compile Include="ObservableCollectionEx.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
