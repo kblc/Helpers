@@ -54,7 +54,7 @@ namespace Helpers
                 bool needRaise = false;
 
                 if (value > 100 || value < 0)
-                    throw new ArgumentException("Значение должно быть в диапазоне от 0 до 100");
+                    throw new ArgumentException(Resource.PercentageProgress_ValueMustBeMoreZeroAndLesstOneHundred);
 
                 lock (childLocks)
                     if (childs.Count == 0)
