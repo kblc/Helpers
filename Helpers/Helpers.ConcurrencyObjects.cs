@@ -30,13 +30,13 @@ namespace Helpers
             }
         }
 
-        public ConcurrencyObjects()
-        {
-
-        }
-
+        public ConcurrencyObjects() { }
 
         private object lockGetObject = new object();
+        /// <summary>
+        /// Get first free object or new
+        /// </summary>
+        /// <returns>New or free object</returns>
         public T GetObject()
         {
             T result = default(T);
@@ -71,9 +71,23 @@ namespace Helpers
             return result;
         }
 
+        /// <summary>
+        /// Return object to bag
+        /// </summary>
+        /// <param name="obj">Object to return</param>
         public void ReturnObject(T obj)
         {
             objectsDictionary.TryUpdate(obj, false, true);
+        }
+
+        /// <summary>
+        /// Remove object from bag
+        /// </summary>
+        /// <param name="obj">Object to remove</param>
+        public void RemoveObject(T obj)
+        {
+            bool res;
+            objectsDictionary.TryRemove(obj, out res);
         }
 
         protected virtual T GetNewObjectInside()
@@ -88,6 +102,9 @@ namespace Helpers
             return result;
         }
 
-        public Func<T> GetNewObject = null;
+        /// <summary>
+        /// Function to get new instance of object
+        /// </summary>
+        public Func<T> GetNewObject { get; set; }
     }
 }
