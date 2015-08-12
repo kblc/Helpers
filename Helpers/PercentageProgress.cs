@@ -16,7 +16,7 @@ namespace Helpers
         public class PercentageProgressEventArgs : EventArgs
         {
             public PercentageProgressEventArgs() { }
-            public PercentageProgressEventArgs(float value)
+            public PercentageProgressEventArgs(decimal value)
             {
                 Value = value;
             }
@@ -24,7 +24,7 @@ namespace Helpers
             /// <summary>
             /// Current percentage progress value
             /// </summary>
-            public readonly float Value = 0;
+            public readonly decimal Value = 0;
         }
 
         public PercentageProgress() { }
@@ -32,17 +32,22 @@ namespace Helpers
         private object childLocks = new Object();
         private List<PercentageProgress> childs = new List<PercentageProgress>();
 
-        private float value = 0;
-
+        private decimal value = 0m;
         /// <summary>
         /// Get or set current percentage value for this part (from 0 to 100)
         /// </summary>
-        public float Value
+        public decimal Value
         {
             get
             {
                 lock (childLocks)
-                    return (childs.Count == 0) ? value : (childs.Sum(i => i.Value) / childs.Count);
+                {
+                    if (childs.Count == 0)
+                        return value;
+
+                    var childWeight = (decimal)childs.Count / childs.Sum(i => i.Weight);
+                    return childs.Sum(i => i.Value * (childWeight * i.Weight)) / childs.Count;
+                }
             }
             set
             {
@@ -79,6 +84,12 @@ namespace Helpers
             }
         }
 
+        private decimal weight = 1m;
+        /// <summary>
+        /// Get or set weight for child node (default = 1)
+        /// </summary>
+        public decimal Weight { get { return weight; } set { if (weight == value) return; weight = value; RaiseChange(); } }
+
         /// <summary>
         /// Get if current part has child
         /// </summary>
@@ -92,7 +103,7 @@ namespace Helpers
         /// </summary>
         /// <param name="value">Percentage value for new child</param>
         /// <returns>Child with default value for this item</returns>
-        public PercentageProgress GetChild(float value = 0)
+        public PercentageProgress GetChild(decimal value = 0m)
         {
             PercentageProgress result = new PercentageProgress() { Value = value };
             result.Change += child_Change;
@@ -127,8 +138,9 @@ namespace Helpers
         private bool lockRaise = false;
         private void RaiseChange()
         {
-            if (Change != null && !lockRaise)
-                Change(this, new PercentageProgressEventArgs(Value));
+            var chg = Change;
+            if (chg != null && !lockRaise)
+                chg(this, new PercentageProgressEventArgs(Value));
         }
 
         /// <summary>

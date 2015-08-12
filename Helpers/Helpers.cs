@@ -141,6 +141,7 @@ namespace Helpers
                 return;
             }
 
+            
             Add(session, string.Format("elapsed time: {0} ms.", (DateTime.Now - Sessions[session].SessionStart).TotalMilliseconds));
             lock (sessionsLock)
             {
