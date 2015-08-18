@@ -263,7 +263,7 @@ namespace Helpers
                     File.Delete(LogFilePath);
         }
 
-        public static string GetExceptionText(this Exception ex, string whereCathed = null)
+        public static string GetExceptionText(this Exception ex, string whereCathed = null, bool includeStackTrace = true, bool clearText = false)
         {
             if (ex == null)
                 return string.Empty;
@@ -272,14 +272,18 @@ namespace Helpers
             Exception innerEx = ex;
             while (innerEx != null)
             {
-                result += 
-                    (string.IsNullOrWhiteSpace(result))
-                    ?                       string.Format("exception '{0}' occured; Source: '{1}';", innerEx.Message, innerEx.Source)
-                    : Environment.NewLine + string.Format("inner exception '{0}' occured; Source: '{1}';", innerEx.Message, innerEx.Source);
-
+                if (clearText)
+                    result += (string.IsNullOrWhiteSpace(result) ? string.Empty : Environment.NewLine) + innerEx.Message;
+                else
+                    result += (
+                        (string.IsNullOrWhiteSpace(result))
+                        ?                       string.Format("exception '{0}' occured;", innerEx.Message)
+                        : Environment.NewLine + string.Format("inner exception '{0}' occured;", innerEx.Message)
+                        ) + (string.IsNullOrWhiteSpace(innerEx.Source) ? string.Empty : string.Format(" Source: '{0}';", innerEx.Source));
                 innerEx = innerEx.InnerException;
             }
-            result += string.Format("{0}{1}{0}", Environment.NewLine, ex.StackTrace);
+            if (!string.IsNullOrWhiteSpace(ex.StackTrace) && includeStackTrace)
+                result += string.Format("{0}{1}{0}", Environment.NewLine, ex.StackTrace);
 
             if (whereCathed != null)
                 result = string.Format(WhereCatchedFormat, whereCathed, result);
