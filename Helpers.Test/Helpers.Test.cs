@@ -25,6 +25,15 @@ namespace Helpers.Test
         }
 
         [TestMethod]
+        public void ExceptionDataTest()
+        {
+            var ex = new Exception();
+            ex.Data.Add("data2", "data container");
+            Assert.AreEqual(true, ex.GetExceptionText(includeData: true).Contains("data2"));
+            Assert.AreEqual(true, ex.GetExceptionText(includeData: true).Contains("data container"));
+        }
+
+        [TestMethod]
         public void ConcurrencyObjects()
         {
             bool th1End = false;

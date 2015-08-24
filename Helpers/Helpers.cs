@@ -263,7 +263,7 @@ namespace Helpers
                     File.Delete(LogFilePath);
         }
 
-        public static string GetExceptionText(this Exception ex, string whereCathed = null, bool includeStackTrace = true, bool clearText = false)
+        public static string GetExceptionText(this Exception ex, string whereCathed = null, bool includeStackTrace = true, bool clearText = false, bool includeData = true)
         {
             if (ex == null)
                 return string.Empty;
@@ -280,6 +280,18 @@ namespace Helpers
                         ?                       string.Format("exception '{0}' occured;", innerEx.Message)
                         : Environment.NewLine + string.Format("inner exception '{0}' occured;", innerEx.Message)
                         ) + (string.IsNullOrWhiteSpace(innerEx.Source) ? string.Empty : string.Format(" Source: '{0}';", innerEx.Source));
+
+                if (!clearText && includeData && innerEx.Data != null && innerEx.Data.Count > 0)
+                {
+                    result += Environment.NewLine + string.Format("exception data (items count: {0}):", innerEx.Data.Count);
+                    int n = 0;
+                    foreach(var key in innerEx.Data.Keys)
+                    {
+                        var value = innerEx.Data[key];
+                        result += string.Format("{0}data item ({1}) key: '{2}'{0}{3}", Environment.NewLine, n, key, value ?? "<NULL>");
+                        n++;
+                    }
+                }
                 innerEx = innerEx.InnerException;
             }
             if (!string.IsNullOrWhiteSpace(ex.StackTrace) && includeStackTrace)
@@ -330,7 +342,10 @@ namespace Helpers
             }
             catch (Exception ex)
             {
-                Log.Add(ex.GetExceptionText("Helpers.Extensions.StringLikes()"));
+                ex.Data.Add(nameof(source), source);
+                ex.Data.Add(nameof(mask), mask);
+                ex.Data.Add(nameof(ignoreCase), ignoreCase);
+                Log.Add(ex, "Helpers.Extensions.StringLikes");
                 return false;
             }
         }
