@@ -15,7 +15,14 @@ namespace Helpers
         /// </summary>
         public class PercentageProgressEventArgs : EventArgs
         {
+            /// <summary>
+            /// Create new instance
+            /// </summary>
             public PercentageProgressEventArgs() { }
+            /// <summary>
+            /// Create new instance and init value
+            /// </summary>
+            /// <param name="value">Value</param>
             public PercentageProgressEventArgs(decimal value)
             {
                 Value = value;
