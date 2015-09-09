@@ -342,9 +342,9 @@ namespace Helpers
             }
             catch (Exception ex)
             {
-                ex.Data.Add(nameof(source), source);
-                ex.Data.Add(nameof(mask), mask);
-                ex.Data.Add(nameof(ignoreCase), ignoreCase);
+                ex.Data.Add("source", source);
+                ex.Data.Add("mask", mask);
+                ex.Data.Add("ignoreCase", ignoreCase);
                 Log.Add(ex, "Helpers.Extensions.StringLikes");
                 return false;
             }
