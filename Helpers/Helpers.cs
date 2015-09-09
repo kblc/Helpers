@@ -127,20 +127,25 @@ namespace Helpers
 
         public static Guid SessionStart(string sessionName, bool isBlockInfo = false)
         {
-            Guid result = Guid.NewGuid();
             lock (sessionsLock)
+            {
+                Guid result = Guid.NewGuid();
                 Sessions.Add(result, new SessionInfo(sessionName) { IsBlockInfo = isBlockInfo });
-            return result;
+                return result;
+            }
         }
 
         public static void SessionEnd(Guid session, bool writeThisBlock = true)
         {
-            if (!Sessions.ContainsKey(session))
+            var contains = false;
+            lock (sessionsLock)
+                contains = Sessions.ContainsKey(session);
+
+            if (!contains)
             {
                 WriteToLogOutput(new string[] { (new Exception(string.Format("Session '{0}' not exists in session dictionary", session.ToString()))).GetExceptionText() });
                 return;
             }
-
             
             Add(session, string.Format("elapsed time: {0} ms.", (DateTime.Now - Sessions[session].SessionStart).TotalMilliseconds));
             lock (sessionsLock)
