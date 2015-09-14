@@ -94,6 +94,7 @@
   <ItemGroup>
     <Compile Include="Helpers.ConcurrencyObjects.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="Helpers.CSV.cs" />
     <Compile Include="Helpers.Serialization.cs" />
     <Compile Include="PercentageProgress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
