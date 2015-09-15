@@ -35,18 +35,26 @@ namespace Helpers.CSV
             Action<DataTable> tableValidator = null,
             Action<DataRow> rowValidator = null)
         {
-            var log = new Action<string>((s) => { if (verboseLogAction != null) verboseLogAction(s); });
+            if (lines == null)
+                throw new ArgumentNullException("lines");
+
+            if (delimiter == null)
+                throw new ArgumentNullException("delimiter");
+
+            if (string.IsNullOrWhiteSpace(delimiter))
+                throw new ArgumentException("delimiter");
+
+            verboseLogAction = verboseLogAction ?? new Action<string>((s) => { });
             columnRenamer = columnRenamer ?? new Func<string, string>((s) => s);
             tableValidator = tableValidator ?? new Action<DataTable>((table) => { });
             rowValidator = rowValidator ?? new Action<DataRow>((row) => { });
-            log("start load");
 
-            log(string.Format("total lines readed from file: '{0}'", lines.Count()));
+            verboseLogAction(string.Format("start load. Total lines in lines array: '{0}'", lines.Count()));
 
             var res = new CSVFile()
             {
-                Table = new DataTable(tableName),
-                FilePath = filePath,
+                Table = new DataTable(tableName ?? string.Empty),
+                FilePath = filePath ?? string.Empty,
                 ProcessedRowCount = 0,
                 TotalRowCount = lines.Count()
             };
@@ -55,16 +63,14 @@ namespace Helpers.CSV
 
             try
             {
-                foreach (string line in lines)
+                foreach (var fields in lines.Select(l => GetCsvFields(l, delimiter).ToArray()))
                 {
                     bool needProceedRow = true;
-                    var fields = GetCsvFields(line, delimiter).Select(f => ClearField(f)).ToArray();
-
                     if (res.Table.Columns.Count == 0)
                     {
                         if (hasColumns)
                         {
-                            log(string.Format("read columns"));
+                            verboseLogAction(string.Format("read columns"));
                             res.Table.Columns.AddRange(
                                 Enumerable.Range(0, fields.Length)
                                     .Select(i => new { ColumnName = fields[i], Index = i })                                
@@ -81,14 +87,15 @@ namespace Helpers.CSV
                         }
                         else
                         {
+                            verboseLogAction(string.Format("generate columns"));
                             for (int i = 0; i < fields.Length; i++)
                                 res.Table.Columns.Add(string.Format("column_{0}", i), typeof(string));
 
                         }
-                        log(string.Format("read columns done. columns count: '{0}'", res.Table.Columns.Count));
-                        log("validate table");
+                        verboseLogAction(string.Format("read columns done. columns count: '{0}'", res.Table.Columns.Count));
+                        verboseLogAction("validate table");
                         tableValidator(res.Table);
-                        log("table validation done");
+                        verboseLogAction("table validation done");
                     }
 
                     if (needProceedRow)
@@ -111,7 +118,7 @@ namespace Helpers.CSV
             }
             finally
             {
-                log(string.Format("import end. Imported '{1}' from '{0}' rows.", res.Table.Rows.Count, res.TotalRowCount));
+                verboseLogAction(string.Format("import end. Imported '{0}' from '{1}' rows.", res.Table.Rows.Count, res.TotalRowCount));
             }
             return res;
         }
@@ -127,18 +134,18 @@ namespace Helpers.CSV
             Action<DataTable> tableValidator = null,
             Action<DataRow> rowValidator = null)
         {
-            var log = new Action<string>((s) => { if (verboseLogAction != null) verboseLogAction(s); });
+            verboseLogAction = verboseLogAction ?? new Action<string>((s) => { });
 
             if (!File.Exists(filePath))
                 throw new Exception(string.Format("File '{0}' not exists", filePath));
 
-            log(string.Format("file '{0}' exists", filePath));
+            verboseLogAction(string.Format("file '{0}' exists", filePath));
 
             var lines = File.ReadAllLines(filePath, fileEncoding ?? Encoding.Default);
 
-            log(string.Format("total lines readed from file: '{0}'", lines.Length));
+            verboseLogAction(string.Format("total lines readed from file: '{0}'", lines.Length));
 
-            return Load(lines: lines, tableName: tableName ?? Path.GetFileName(filePath), filePath: filePath, verboseLogAction: log, hasColumns: hasColumns, delimiter: delimiter, columnRenamer: columnRenamer, tableValidator: tableValidator, rowValidator: rowValidator);
+            return Load(lines: lines, tableName: tableName ?? Path.GetFileName(filePath), filePath: filePath, verboseLogAction: (s) => { verboseLogAction(string.Format("load from lines: {0}", s)); }, hasColumns: hasColumns, delimiter: delimiter, columnRenamer: columnRenamer, tableValidator: tableValidator, rowValidator: rowValidator);
         }
 
         public static IEnumerable<string> Save(
@@ -185,6 +192,7 @@ namespace Helpers.CSV
                 }
                 else
                     verboseLogAction("no column line");
+
                 verboseLogAction("add data lines");
                 lines.AddRange(
                     table.Rows
@@ -219,7 +227,7 @@ namespace Helpers.CSV
 
             verboseLogAction("get lines for export files...");
 
-            var lines = Save(table: table, hasColumns: hasColumns, delimiter: delimiter, verboseLogAction: verboseLogAction, columnRenamer: columnRenamer, excludeColumn: excludeColumn);
+            var lines = Save(table: table, hasColumns: hasColumns, delimiter: delimiter, verboseLogAction: (s) => { verboseLogAction(string.Format("save to lines: {0}", s)); }, columnRenamer: columnRenamer, excludeColumn: excludeColumn);
 
             verboseLogAction("get lines done");
 
@@ -259,7 +267,7 @@ namespace Helpers.CSV
             }
             return result;
         }
-        private static string[] GetCsvFields(string line, string delimiter)
+        private static IEnumerable<string> GetCsvFields(string line, string delimiter)
         {
             List<string> result = new List<string>();
 
@@ -306,7 +314,7 @@ namespace Helpers.CSV
                     break;
             }
 
-            return result.ToArray();
+            return result.Select(s => ClearField(s));
         }
         private static string ReadUnquotedField(ref string line, string delimiter)
         {

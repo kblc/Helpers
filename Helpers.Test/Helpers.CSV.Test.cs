@@ -39,6 +39,107 @@ namespace Helpers.CSV.Test
 
             Assert.AreEqual(2, res1.Length, "Lines count must be 2");
             Assert.AreEqual(sb[1],res1[1], "Data lines must equals");
+
+            var res2 = CSVFile.Save(res0.Table, filePath: "test.csv", encoding: Encoding.UTF8, verboseLogAction: Console.WriteLine);
+            var res3 = CSVFile.Load(filePath: "test.csv", fileEncoding: Encoding.UTF8, verboseLogAction: Console.WriteLine);
+
+            Assert.AreEqual(res3.Table.Columns.Count, res0.Table.Columns.Count, "Column count must equals");
+            Assert.AreEqual(res3.Table.Rows.Count, res0.Table.Rows.Count, "Row count must equals");
+            for(int i=0; i< Math.Min(res3.Table.Columns.Count, res0.Table.Columns.Count); i++)
+                Assert.AreEqual(res0.Table.Columns[i].ColumnName,res3.Table.Columns[i].ColumnName, "Columns name must equals");
+            
+            for(int n = 0; n<Math.Min(res3.Table.Rows.Count, res0.Table.Rows.Count);n++)
+                for (int i = 0; i < Math.Min(res3.Table.Columns.Count, res0.Table.Columns.Count); i++)
+                    Assert.AreEqual(res0.Table.Rows[n][i].ToString(), res3.Table.Rows[n][i].ToString(), "Row data must equals");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+        public void TableValidatorCSV()
+        {
+            var tableName = "test";
+            var filePath = "{virtual}";
+            var badColumn = "exception_column";
+
+            var validator0 = new Action<DataTable>((table) => 
+            {
+                if (table.Columns.OfType<DataColumn>().Select(c => c.ColumnName).Contains(badColumn))
+                    throw new ArgumentException("column", string.Format("Table contains '{0}' column", badColumn));
+            });
+
+            var validator1 = new Action<DataTable>((table) =>
+            {
+                if (table.Columns.OfType<DataColumn>().Select(c => c.ColumnName).Contains(badColumn))
+                    throw new Exception(string.Format("Table contains '{0}' column", badColumn));
+            });
+
+            var sb = new List<string>();
+            sb.Add("test0_column;test_column;test_column;;");
+            sb.Add("data0;data1;;data3;");
+            sb.Add(string.Empty);
+
+            var res0 = CSVFile.Load(lines: sb.ToArray(),
+                tableName: tableName,
+                filePath: filePath,
+                verboseLogAction: (s) => Console.WriteLine(s),
+                tableValidator: validator0);
+
+            var sb1 = new List<string>();
+            sb1.Add("test0_column;test_column;test_column;;" + badColumn);
+            sb1.Add("data0;data1;;data3;");
+            sb1.Add(string.Empty);
+
+            var res1 = CSVFile.Load(lines: sb1.ToArray(),
+                tableName: tableName,
+                filePath: filePath,
+                verboseLogAction: (s) => Console.WriteLine(s),
+                tableValidator: validator1);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+        public void RowValidatorCSV()
+        {
+            var tableName = "test";
+            var filePath = "{virtual}";
+            var badColumn = "exception_column";
+            var badData = "exception_data";
+
+            var validator0 = new Action<DataRow>((row) =>
+            {
+                foreach (var c in row.Table.Columns.OfType<DataColumn>())
+                    if (row[c].ToString().Contains(badData))
+                        throw new ArgumentException("row", string.Format("Table contains row with '{0}'", badData));
+            });
+
+            var validator1 = new Action<DataRow>((row) =>
+            {
+                foreach (var c in row.Table.Columns.OfType<DataColumn>())
+                    if (row[c].ToString().Contains(badData))
+                        throw new Exception(string.Format("Table contains row with '{0}'", badData));
+            });
+
+            var sb = new List<string>();
+            sb.Add("test0_column;test_column;test_column;;");
+            sb.Add("data0;data1;;data3;");
+            sb.Add(string.Empty);
+
+            var res0 = CSVFile.Load(lines: sb.ToArray(),
+                tableName: tableName,
+                filePath: filePath,
+                verboseLogAction: (s) => Console.WriteLine(s),
+                rowValidator: validator0);
+
+            var sb1 = new List<string>();
+            sb1.Add("test0_column;test_column;test_column;;" + badColumn);
+            sb1.Add("data0;data1;;data3;" + badData);
+            sb1.Add(string.Empty);
+
+            var res1 = CSVFile.Load(lines: sb1.ToArray(),
+                tableName: tableName,
+                filePath: filePath,
+                verboseLogAction: (s) => Console.WriteLine(s),
+                rowValidator: validator1);
         }
 
         [TestMethod]
