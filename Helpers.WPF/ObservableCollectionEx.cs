@@ -20,7 +20,7 @@ namespace Helpers.WPF
         public override event System.Collections.Specialized.NotifyCollectionChangedEventHandler CollectionChanged;
 
         /// <summary>
-        /// Raises the System.Collections.ObjectModel.ObservableCollection<T>.CollectionChanged event with the provided arguments.
+        /// Raises the CollectionChanged event with the provided arguments.
         /// </summary>
         /// <param name="e">Arguments of the event being raised.</param>
         protected override void OnCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -51,7 +51,7 @@ namespace Helpers.WPF
         }
 
         /// <summary>
-        /// Raises the System.Collections.ObjectModel.ObservableCollection<T>.PropertyChanged event with the provided arguments.
+        /// Raises the PropertyChanged event with the provided arguments.
         /// </summary>
         /// <param name="e">Arguments of the event being raised.</param>
         protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)

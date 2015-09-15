@@ -7,18 +7,23 @@ using System.Threading;
 
 namespace Helpers
 {
+    /// <summary>
+    /// Concurency object list
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class ConcurrencyObjects<T>
     {
-        private int max = 0;
-        public int Max
-        {
-            get { return max; }
-            set { if (value < 0) throw new ArgumentOutOfRangeException(@"Max value can't be less 0"); max = value; }
-        }
+        /// <summary>
+        /// Max concurency objects count inside. 0 = infinity
+        /// </summary>
+        public uint Max { get; set; }
 
         private ConcurrentDictionary<T, bool> objectsDictionary = new ConcurrentDictionary<T, bool>();
 
         private TimeSpan timeToGetObject = new TimeSpan(0,0,0,0,1000);
+        /// <summary>
+        /// Max await objects get
+        /// </summary>
         public TimeSpan TimeToGetObject
         {
             get { return timeToGetObject; }
@@ -29,7 +34,9 @@ namespace Helpers
                 timeToGetObject = value;
             }
         }
-
+        /// <summary>
+        /// Create instance
+        /// </summary>
         public ConcurrencyObjects() { }
 
         private object lockGetObject = new object();
@@ -89,7 +96,10 @@ namespace Helpers
             bool res;
             objectsDictionary.TryRemove(obj, out res);
         }
-
+        /// <summary>
+        /// Get new object instance from function (is exists) or create it from default constructor
+        /// </summary>
+        /// <returns>Instance</returns>
         protected virtual T GetNewObjectInside()
         {
             if (GetNewObject != null)

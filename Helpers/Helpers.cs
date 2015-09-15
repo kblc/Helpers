@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace Helpers
 {
+    /// <summary>
+    /// Log static class for loggin anything
+    /// </summary>
     public static class Log
     {
         internal class SessionInfo : IDisposable
@@ -52,7 +55,6 @@ namespace Helpers
         private static Dictionary<Guid, SessionInfo> Sessions = new Dictionary<Guid, SessionInfo>();
 
         private const string WhereCatchedFormat = "{0} :: {1}";
-
         private static string logFileName = string.Empty;
         
         /// <summary>
@@ -124,7 +126,12 @@ namespace Helpers
                 return !string.IsNullOrWhiteSpace(LogFileName) ? Path.Combine(CurrentPath, LogFileName) : string.Empty;
             }
         }
-
+        /// <summary>
+        /// Start new log session
+        /// </summary>
+        /// <param name="sessionName">Session name (e.g. function name)</param>
+        /// <param name="isBlockInfo">Write log after close session or write directly</param>
+        /// <returns>Session identifier</returns>
         public static Guid SessionStart(string sessionName, bool isBlockInfo = false)
         {
             lock (sessionsLock)
@@ -135,6 +142,11 @@ namespace Helpers
             }
         }
 
+        /// <summary>
+        /// Close log session
+        /// </summary>
+        /// <param name="session">Session identifier</param>
+        /// <param name="writeThisBlock">Use false to hide this session log</param>
         public static void SessionEnd(Guid session, bool writeThisBlock = true)
         {
             var contains = false;
@@ -173,14 +185,23 @@ namespace Helpers
             }
         }
 
+        /// <summary>
+        /// Add log message
+        /// </summary>
+        /// <param name="logMessage">Message to log</param>
         public static void Add(string logMessage)
         {
             Add(Guid.Empty, logMessage);
         }
-        
-        public static void AddWithCatcher(string whereCathched, string logMessage)
+
+        /// <summary>
+        /// Add log message with cather information
+        /// </summary>
+        /// <param name="whereCathed">Cather information (e.g. function name)</param>
+        /// <param name="logMessage">Message to log</param>
+        public static void AddWithCatcher(string whereCathed, string logMessage)
         {
-            Add(Guid.Empty, string.Format(WhereCatchedFormat, whereCathched, logMessage));
+            Add(Guid.Empty, string.Format(WhereCatchedFormat, whereCathed, logMessage));
         }
 
         private static string GetFullLogMessage(Guid session, string logMessage, out bool isBlock)
@@ -222,11 +243,21 @@ namespace Helpers
                     }
         }
 
+        /// <summary>
+        /// Add log message with cather information
+        /// </summary>
+        /// <param name="whereCathed">Cather information (e.g. function name)</param>
+        /// <param name="logMessage">Message to log</param>
         public static void Add(string logMessage, string whereCathed)
         {
-            Add(string.Format(WhereCatchedFormat, whereCathed, logMessage));
+            AddWithCatcher(whereCathed: whereCathed, logMessage: logMessage);
         }
 
+        /// <summary>
+        /// Add log message to session
+        /// </summary>
+        /// <param name="session">Session identifier</param>
+        /// <param name="logMessage">Message to log</param>
         public static void Add(Guid session, string logMessage)
         {
             bool isBlock;
@@ -243,16 +274,30 @@ namespace Helpers
             }
         }
 
+        /// <summary>
+        /// Add log message from exception to session
+        /// </summary>
+        /// <param name="session">Session identifier</param>
+        /// <param name="ex">Exception to log</param>
         public static void Add(Guid session, Exception ex)
         {
             Add(session, ex.GetExceptionText());
         }
 
+        /// <summary>
+        /// Add log message from exception
+        /// </summary>
+        /// <param name="ex">Exception to log</param>
         public static void Add(Exception ex)
         {
             Add(ex.GetExceptionText());
         }
 
+        /// <summary>
+        /// Add log message from exception with catcher information
+        /// </summary>
+        /// <param name="ex">Exception to log</param>
+        /// <param name="whereCathed">Cather information (e.g. function name)</param>
         public static void Add(Exception ex, string whereCathed)
         {
             Add(string.Format(WhereCatchedFormat, whereCathed, ex.GetExceptionText()));
@@ -268,6 +313,15 @@ namespace Helpers
                     File.Delete(LogFilePath);
         }
 
+        /// <summary>
+        /// Get full exception text
+        /// </summary>
+        /// <param name="ex">Exception</param>
+        /// <param name="whereCathed">Cather information (e.g. function name)</param>
+        /// <param name="includeStackTrace">Include stack trace</param>
+        /// <param name="clearText">Include only exception (and inner exceptions) text</param>
+        /// <param name="includeData">Include exception data block is exists</param>
+        /// <returns>Exception text</returns>
         public static string GetExceptionText(this Exception ex, string whereCathed = null, bool includeStackTrace = true, bool clearText = false, bool includeData = true)
         {
             if (ex == null)
@@ -309,13 +363,11 @@ namespace Helpers
         }
     }
 
+    /// <summary>
+    /// Some extensions
+    /// </summary>
     public static partial class Extensions
     {
-        public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
-        {
-            return source.GroupBy(keySelector).Select(grp => grp.First());
-        }
-
         /// <summary>
         /// Check similarity for string and mask (RegEx used)
         /// </summary>
@@ -406,11 +458,9 @@ namespace Helpers
 
         /// <summary>
         /// Get attribute for enumeration value.
-        /// How to use: 
-        /// string description = targetLevel.GetAttributeValue<DescriptionAttribute, string>(x => x.Description);
         /// </summary>
         /// <typeparam name="T">Attribute type to select</typeparam>
-        /// <typeparam name="Expected">Expected value type</typeparam>
+        /// <typeparam name="Expected">Expected value type (e.g. string)</typeparam>
         /// <param name="enumeration">Enumeration type</param>
         /// <param name="expression">Selective expression</param>
         /// <returns>Attribute value for scpecified enum value</returns>

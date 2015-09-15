@@ -8,10 +8,21 @@ using System.Windows.Data;
 
 namespace Helpers.WPF.Converters
 {
+    /// <summary>
+    /// ApplyConverter provide any math operations with parameter (e.g '+' (default), '-', '/', '*')
+    /// </summary>
     public class ApplyConverter : IValueConverter
     {
         private enum ApplyAction { Division, Multiplication, Subtraction, Addition };
 
+        /// <summary>
+        /// IValueConverter.Convert() function implementation
+        /// </summary>
+        /// <param name="value">Value</param>
+        /// <param name="targetType">Result target type</param>
+        /// <param name="parameter">String with math operation (e.g. -10, *2, /3)</param>
+        /// <param name="culture">Converter culture</param>
+        /// <returns>Convert result value</returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             bool wasException = false;
@@ -108,6 +119,14 @@ namespace Helpers.WPF.Converters
             }           
         }
 
+        /// <summary>
+        /// IValueConverter.ConvertBack() function implementation
+        /// </summary>
+        /// <param name="value">Value</param>
+        /// <param name="targetType">Result target type</param>
+        /// <param name="parameter">String with math operation (e.g. -10, *2, /3)</param>
+        /// <param name="culture">Converter culture</param>
+        /// <returns>Return value not implemented</returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();

@@ -11,19 +11,45 @@ using System.Xml.Serialization;
 
 namespace Helpers.CSV
 {
+    /// <summary>
+    /// Helper for work with CSV file
+    /// </summary>
     public class CSVFile
     {
         #region Result fields
-
+        /// <summary>
+        /// Result table
+        /// </summary>
         public DataTable Table { get; private set; }
+        /// <summary>
+        /// Total row count
+        /// </summary>
         public int TotalRowCount { get; private set; }
+        /// <summary>
+        /// Processed row count
+        /// </summary>
         public int ProcessedRowCount { get; private set; }
+        /// <summary>
+        /// File path
+        /// </summary>
         public string FilePath { get; private set; }
 
         #endregion
 
         private CSVFile() { }
-
+        /// <summary>
+        /// Load CSV table from lines
+        /// </summary>
+        /// <param name="lines">CSV file lines</param>
+        /// <param name="tableName">Result table name</param>
+        /// <param name="filePath">Result file path</param>
+        /// <param name="hasColumns">Is first row is column row</param>
+        /// <param name="delimiter">Separator between data</param>
+        /// <param name="verboseLogAction">Action to verbose load action</param>
+        /// <param name="columnRenamer">Action to rename columns</param>
+        /// <param name="tableValidator">Validate table before load</param>
+        /// <param name="rowValidator">Validate each row when load it</param>
+        /// <returns>CSV file load info</returns>
         public static CSVFile Load(
             IEnumerable<string> lines,
             string tableName,
@@ -123,6 +149,19 @@ namespace Helpers.CSV
             return res;
         }
 
+        /// <summary>
+        /// Load CSV table from file
+        /// </summary>
+        /// <param name="filePath">File path to load file</param>
+        /// <param name="fileEncoding">File encoding</param>
+        /// <param name="tableName">Result table name</param>
+        /// <param name="hasColumns">Is first row is column row</param>
+        /// <param name="delimiter">Separator between data</param>
+        /// <param name="verboseLogAction">Action to verbose load action</param>
+        /// <param name="columnRenamer">Action to rename columns</param>
+        /// <param name="tableValidator">Validate table before load</param>
+        /// <param name="rowValidator">Validate each row when load it</param>
+        /// <returns>CSV file load info</returns>
         public static CSVFile Load(
             string filePath,
             Encoding fileEncoding = null,
@@ -148,6 +187,16 @@ namespace Helpers.CSV
             return Load(lines: lines, tableName: tableName ?? Path.GetFileName(filePath), filePath: filePath, verboseLogAction: (s) => { verboseLogAction(string.Format("load from lines: {0}", s)); }, hasColumns: hasColumns, delimiter: delimiter, columnRenamer: columnRenamer, tableValidator: tableValidator, rowValidator: rowValidator);
         }
 
+        /// <summary>
+        /// Get lines for CSV file from DataTable
+        /// </summary>
+        /// <param name="table">Table with data for CSV file</param>
+        /// <param name="hasColumns">Write column line</param>
+        /// <param name="delimiter">Separator between data</param>
+        /// <param name="verboseLogAction">Action for verbose saving</param>
+        /// <param name="columnRenamer">Function for rename columns before save</param>
+        /// <param name="excludeColumn">Function for exclude columns</param>
+        /// <returns>CSV file lines</returns>
         public static IEnumerable<string> Save(
             DataTable table, 
             bool hasColumns = true, 
@@ -212,6 +261,18 @@ namespace Helpers.CSV
             return lines;
         }
 
+        /// <summary>
+        /// Save DataTable to CSV file
+        /// </summary>
+        /// <param name="table">Table with data for CSV file</param>
+        /// <param name="filePath">File path to save file</param>
+        /// <param name="encoding">File encoding</param>
+        /// <param name="hasColumns">Write column line</param>
+        /// <param name="delimiter">Separator between data</param>
+        /// <param name="verboseLogAction">Action for verbose saving</param>
+        /// <param name="columnRenamer">Function for rename columns before save</param>
+        /// <param name="excludeColumn">Function for exclude columns</param>
+        /// <returns></returns>
         public static CSVFile Save(
             DataTable table, 
             string filePath, 
