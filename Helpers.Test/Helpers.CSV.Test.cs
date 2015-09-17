@@ -13,7 +13,7 @@ namespace Helpers.CSV.Test
     public class HelpersCSVTest
     {
         [TestMethod]
-        public void LoadAndSaveCSV()
+        public void HelperCSV_LoadAndSave()
         {
             var tableName = "test";
             var filePath = "{virtual}";
@@ -55,7 +55,7 @@ namespace Helpers.CSV.Test
 
         [TestMethod]
         [ExpectedException(typeof(Exception))]
-        public void TableValidatorCSV()
+        public void HelperCSV_TableValidator()
         {
             var tableName = "test";
             var filePath = "{virtual}";
@@ -79,12 +79,12 @@ namespace Helpers.CSV.Test
             var rnd = new Random(1);
             rnd.Next();
 
-            for(var i=0; i < 1000; i++)
+            for(var i=0; i < 10000; i++)
                 sb.Add(string.Format("data{0};data{1};;data{2};", rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(0, 100)));
 
             sb.Add(string.Empty);
 
-            var res0 = CSVFile.Load(lines: sb.ToArray(),
+            var res0 = CSVFile.Load(lines: sb,
                 tableName: tableName,
                 filePath: filePath,
                 verboseLogAction: (s) => Console.WriteLine(s),
@@ -95,7 +95,7 @@ namespace Helpers.CSV.Test
             sb1.Add("data0;data1;;data3;");
             sb1.Add(string.Empty);
 
-            var res1 = CSVFile.Load(lines: sb1.ToArray(),
+            var res1 = CSVFile.Load(lines: sb1,
                 tableName: tableName,
                 filePath: filePath,
                 verboseLogAction: (s) => Console.WriteLine(s),
@@ -104,7 +104,7 @@ namespace Helpers.CSV.Test
 
         [TestMethod]
         [ExpectedException(typeof(Exception))]
-        public void RowValidatorCSV()
+        public void HelperCSV_RowValidator()
         {
             var tableName = "test";
             var filePath = "{virtual}";
@@ -129,29 +129,35 @@ namespace Helpers.CSV.Test
 
             var sb = new List<string>();
             sb.Add("test0_column;test_column;test_column;;");
-            sb.Add("data0;data1;;data3;");
+            var rnd = new Random(1);
+            rnd.Next();
+
+            for (var i = 0; i < 10000; i++)
+                sb.Add(string.Format("data{0};data{1};;data{2};", rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(0, 100)));
+
             sb.Add(string.Empty);
 
-            var res0 = CSVFile.Load(lines: sb.ToArray(),
+            var res0 = CSVFile.Load(
+                lines: sb,
                 tableName: tableName,
                 filePath: filePath,
                 verboseLogAction: (s) => Console.WriteLine(s),
-                rowValidator: validator0);
+                rowFilter: (r) => validator0(r) );
 
             var sb1 = new List<string>();
             sb1.Add("test0_column;test_column;test_column;;" + badColumn);
             sb1.Add("data0;data1;;data3;" + badData);
             sb1.Add(string.Empty);
 
-            var res1 = CSVFile.Load(lines: sb1.ToArray(),
+            var res1 = CSVFile.Load(lines: sb1,
                 tableName: tableName,
                 filePath: filePath,
                 verboseLogAction: (s) => Console.WriteLine(s),
-                rowValidator: validator1);
+                rowFilter: (r) => validator1(r));
         }
 
         [TestMethod]
-        public void MergeTables()
+        public void HelperCSV_MergeTables()
         {
             var dt0 = new DataTable();
             dt0.Columns.Add(new DataColumn() { ColumnName = "id", DataType = typeof(int) });
@@ -183,6 +189,37 @@ namespace Helpers.CSV.Test
             var res2 = CSV.CSVFile.MergeTables(new DataTable[] { dt0, dt1 }, new string[] { "id" });
             Assert.AreEqual(2, res2.Rows.Count, "Row count must be 2");
             Assert.AreEqual(3, res2.Columns.Count, "Column count must be 3");
+        }
+
+        [TestMethod]
+        public void HelperCSV_MergeBigTables()
+        {
+            var dt0 = new DataTable();
+            dt0.Columns.Add(new DataColumn() { ColumnName = "id", DataType = typeof(int) });
+            dt0.Columns.Add(new DataColumn() { ColumnName = "name", DataType = typeof(string) });
+            dt0.PrimaryKey = new DataColumn[] { dt0.Columns[0] };
+
+            var dt1 = new DataTable();
+            dt1.Columns.Add(new DataColumn() { ColumnName = "id", DataType = typeof(int) });
+            dt1.Columns.Add(new DataColumn() { ColumnName = "last_name", DataType = typeof(string) });
+            dt1.PrimaryKey = new DataColumn[] { dt1.Columns[0] };
+            
+            for(int i=0; i<10000; i++)
+            { 
+                var dr0 = dt0.NewRow();
+                dr0["id"] = i + 1;
+                dr0["name"] = string.Format("test name {0}", i);
+                dt0.Rows.Add(dr0);
+
+                var dr1 = dt1.NewRow();
+                dr1["id"] = i + 1;
+                dr1["last_name"] = string.Format("test last name {0}", i);
+                dt1.Rows.Add(dr1);
+            }
+
+            var res = CSV.CSVFile.MergeTables(new DataTable[] { dt0, dt1 }, new string[] { "id" });
+            Assert.AreEqual(10000, res.Rows.Count, "Row count must be 10000");
+            Assert.AreEqual(3, res.Columns.Count, "Column count must be 3");
         }
     }
 }

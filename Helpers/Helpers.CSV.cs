@@ -49,7 +49,7 @@ namespace Helpers.CSV
         /// <param name="verboseLogAction">Action to verbose load action</param>
         /// <param name="columnRenamer">Action to rename columns</param>
         /// <param name="tableValidator">Validate table before load</param>
-        /// <param name="rowValidator">Validate each row when load it</param>
+        /// <param name="rowFilter">Validate each row when load it</param>
         /// <returns>CSV file load info</returns>
         public static CSVFile Load(
             IEnumerable<string> lines,
@@ -60,8 +60,7 @@ namespace Helpers.CSV
             Action<string> verboseLogAction = null,
             Func<string, string> columnRenamer = null,
             Action<DataTable> tableValidator = null,
-            Func<DataRow, bool> rowValidator = null,
-            Expression<Func<DataRow,bool>> rowValidationExpression = null)
+            Expression<Func<DataRow, bool>> rowFilter = null)
         {
             if (lines == null)
                 throw new ArgumentNullException("lines");
@@ -72,10 +71,12 @@ namespace Helpers.CSV
             if (string.IsNullOrWhiteSpace(delimiter))
                 throw new ArgumentException("delimiter");
 
+            Expression<Func<DataRow,bool>> defFilter = r => true;
+
             verboseLogAction = verboseLogAction ?? new Action<string>((s) => { });
             columnRenamer = columnRenamer ?? new Func<string, string>((s) => s);
             tableValidator = tableValidator ?? new Action<DataTable>((table) => { });
-            rowValidator = rowValidator ?? new Func<DataRow, bool>((row) => true);
+            rowFilter = rowFilter ?? defFilter;
 
             verboseLogAction(string.Format("start load. Total lines in lines array: '{0}'", lines.Count()));
 
@@ -130,6 +131,8 @@ namespace Helpers.CSV
                     verboseLogAction("table validation done");
                     #endregion
 
+                    var rf = rowFilter.Compile();
+
                     var dataRows = rows
                         .Skip(hasColumns ? 1 : 0)
                         .AsParallel()
@@ -138,7 +141,7 @@ namespace Helpers.CSV
                                 var row = res.Table.NewRow();
                                 for (int n = 0; n < Math.Min(i.Fields.Length, res.Table.Columns.Count); n++)
                                     row[res.Table.Columns[n]] = i.Fields[n];
-                                return new { i.Fields, i.Index, Row = row, IsValid = rowValidator(row) };
+                                return new { i.Fields, i.Index, Row = row, IsValid = rf(row) };
                             })
                         .OrderBy(r => r.Index)
                         .ToArray();
@@ -239,7 +242,7 @@ namespace Helpers.CSV
         /// <param name="verboseLogAction">Action to verbose load action</param>
         /// <param name="columnRenamer">Action to rename columns</param>
         /// <param name="tableValidator">Validate table before load</param>
-        /// <param name="rowValidator">Validate each row when load it</param>
+        /// <param name="rowFilter">Filter each row when load it (true for add row in data table)</param>
         /// <returns>CSV file load info</returns>
         public static CSVFile Load(
             string filePath,
@@ -250,7 +253,7 @@ namespace Helpers.CSV
             Action<string> verboseLogAction = null, 
             Func<string,string> columnRenamer = null,
             Action<DataTable> tableValidator = null,
-            Func<DataRow, bool> rowValidator = null)
+            Expression<Func<DataRow, bool>> rowFilter = null)
         {
             verboseLogAction = verboseLogAction ?? new Action<string>((s) => { });
 
@@ -263,7 +266,7 @@ namespace Helpers.CSV
 
             verboseLogAction(string.Format("total lines readed from file: '{0}'", lines.Length));
 
-            return Load(lines: lines, tableName: tableName ?? Path.GetFileName(filePath), filePath: filePath, verboseLogAction: (s) => { verboseLogAction(string.Format("load from lines: {0}", s)); }, hasColumns: hasColumns, delimiter: delimiter, columnRenamer: columnRenamer, tableValidator: tableValidator, rowValidator: rowValidator);
+            return Load(lines: lines, tableName: tableName ?? Path.GetFileName(filePath), filePath: filePath, verboseLogAction: (s) => { verboseLogAction(string.Format("load from lines: {0}", s)); }, hasColumns: hasColumns, delimiter: delimiter, columnRenamer: columnRenamer, tableValidator: tableValidator, rowFilter: rowFilter);
         }
 
         /// <summary>
