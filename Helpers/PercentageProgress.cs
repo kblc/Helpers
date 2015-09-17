@@ -34,6 +34,9 @@ namespace Helpers
             public readonly decimal Value = 0;
         }
 
+        /// <summary>
+        /// Create PercentageProgress instance
+        /// </summary>
         public PercentageProgress() { }
 
         private object childLocks = new Object();

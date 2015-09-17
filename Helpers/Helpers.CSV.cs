@@ -60,7 +60,7 @@ namespace Helpers.CSV
             Action<string> verboseLogAction = null,
             Func<string, string> columnRenamer = null,
             Action<DataTable> tableValidator = null,
-            Expression<Func<DataRow, bool>> rowFilter = null)
+            Func<DataRow, bool> rowFilter = null)
         {
             if (lines == null)
                 throw new ArgumentNullException("lines");
@@ -71,12 +71,10 @@ namespace Helpers.CSV
             if (string.IsNullOrWhiteSpace(delimiter))
                 throw new ArgumentException("delimiter");
 
-            Expression<Func<DataRow,bool>> defFilter = r => true;
-
             verboseLogAction = verboseLogAction ?? new Action<string>((s) => { });
             columnRenamer = columnRenamer ?? new Func<string, string>((s) => s);
             tableValidator = tableValidator ?? new Action<DataTable>((table) => { });
-            rowFilter = rowFilter ?? defFilter;
+            rowFilter = rowFilter ?? new Func<DataRow, bool>((r) => false);
 
             verboseLogAction(string.Format("start load. Total lines in lines array: '{0}'", lines.Count()));
 
@@ -88,16 +86,16 @@ namespace Helpers.CSV
                 TotalRowCount = lines.Count()
             };
 
-            lines = lines.Where(l => !string.IsNullOrWhiteSpace(l));
+            var linesArr = lines.Where(l => !string.IsNullOrWhiteSpace(l)).ToArray();
 
             try
             {
-                var cnt = lines.Count();
-
-                var rows = Enumerable.Range(0, cnt)
+                var rows = Enumerable.Range(0, linesArr.Length)
                     .AsParallel()
-                    .Select(i => new { Index = i, Line = lines.ElementAt(i) })
-                    .Select(i => new { i.Index, Fields = GetCsvFields(i.Line, delimiter).ToArray() });
+                    .Select(i => new { Index = i, Line = linesArr[i] })
+                    .Select(i => new { i.Index, Fields = GetCsvFields(i.Line, delimiter).ToArray() })
+                    .OrderBy(i => i.Index)
+                    .ToArray();
 
                 var firstRow = rows.FirstOrDefault();
                 if (firstRow != null)
@@ -131,25 +129,30 @@ namespace Helpers.CSV
                     verboseLogAction("table validation done");
                     #endregion
 
-                    var rf = rowFilter.Compile();
+                    var tableColumns = res.Table
+                        .Columns
+                        .OfType<DataColumn>()
+                        .Select(c => c.ColumnName)
+                        .ToArray();
 
                     var dataRows = rows
                         .Skip(hasColumns ? 1 : 0)
+                        .Select(i => new { i.Fields, i.Index, Row = res.Table.NewRow() })
                         .AsParallel()
-                        .Select(i =>
+                        .Select(item =>
                             {
-                                var row = res.Table.NewRow();
-                                for (int n = 0; n < Math.Min(i.Fields.Length, res.Table.Columns.Count); n++)
-                                    row[res.Table.Columns[n]] = i.Fields[n];
-                                return new { i.Fields, i.Index, Row = row, IsValid = rf(row) };
+                                var minLength = Math.Min(item.Fields.Length, tableColumns.Length);
+                                for (int n = 0; n < minLength; n++)
+                                    item.Row[tableColumns[n]] = item.Fields[n];
+                                return new { item.Index, item.Row, IsFilterd = rowFilter(item.Row) };
                             })
                         .OrderBy(r => r.Index)
                         .ToArray();
 
-                    foreach (var dr in dataRows.Where(r => !r.IsValid))
+                    foreach (var dr in dataRows.Where(r => r.IsFilterd))
                         verboseLogAction(string.Format("column validation error on index: {0}, row: '{1}'", dr.Index, lines.ElementAt(dr.Index)));
 
-                    var validRows = dataRows.Where(r => r.IsValid);
+                    var validRows = dataRows.Where(r => !r.IsFilterd);
                     foreach (var dr in validRows)
                         res.Table.Rows.Add(dr.Row);
 
@@ -157,65 +160,6 @@ namespace Helpers.CSV
                 }
                 else
                     throw new Exception(Resource.Helpers_CSV_Load_NoOneRowFound);
-
-                //foreach (var fields in lines.Select(l => GetCsvFields(l, delimiter).ToArray()))
-                //{
-                //    #region Columns
-                //    bool needProceedRow = true;
-                //    if (res.Table.Columns.Count == 0)
-                //    {
-                //        if (hasColumns)
-                //        {
-                //            verboseLogAction(string.Format("read columns"));
-                //            res.Table.Columns.AddRange(
-                //                Enumerable.Range(0, fields.Length)
-                //                    .Select(i => new { ColumnName = fields[i], Index = i })                                
-                //                    .Select(c => new { ColumnName = columnRenamer(c.ColumnName.ToLower().Trim()), c.Index })
-                //                    .Select(c => new { ColumnName = string.IsNullOrWhiteSpace(c.ColumnName) ? "column" : c.ColumnName, c.Index })
-                //                    .GroupBy(c => c.ColumnName)
-                //                    .SelectMany(g => g.Select(i => new { ColumnName = i.ColumnName + ( g.Count() == 1 ? string.Empty : "_" + i.Index.ToString() ), Index = i.Index } ) )
-                //                    .OrderBy(i => i.Index)
-                //                    .Select(c => c.ColumnName)
-                //                    .Select(c => new DataColumn(c, typeof(string)))
-                //                    .ToArray()
-                //                );
-                //            needProceedRow = false;
-                //        }
-                //        else
-                //        {
-                //            verboseLogAction(string.Format("generate columns"));
-                //            for (int i = 0; i < fields.Length; i++)
-                //                res.Table.Columns.Add(string.Format("column_{0}", i), typeof(string));
-
-                //        }
-                //        verboseLogAction(string.Format("read columns done. columns count: '{0}'", res.Table.Columns.Count));
-                //        verboseLogAction("validate table");
-                //        tableValidator(res.Table);
-                //        verboseLogAction("table validation done");
-                //    }
-                //    #endregion
-
-                //    if (needProceedRow)
-                //    {
-                //        var row = res.Table.NewRow();
-                //        for (int i = 0; i < Math.Min(fields.Length, res.Table.Columns.Count); i++)
-                //            row[res.Table.Columns[i]] = fields[i];
-                        
-                //        try
-                //        { 
-                //            if (rowValidator(row))
-                //                res.Table.Rows.Add(row);
-                //        }
-                //        catch(Exception ex)
-                //        {
-                //            var e = new Exception("Row read exception. See inner exception for details", ex);
-                //            e.Data.Add("Exception thrown at line number", res.ProcessedRowCount);
-                //            e.Data.Add("Exception thrown at line", lines.ElementAt(res.ProcessedRowCount));
-                //            verboseLogAction(e.GetExceptionText());
-                //        }
-                //    }
-                //    res.ProcessedRowCount++;
-                //}
             }
             catch (Exception ex)
             {
@@ -253,7 +197,7 @@ namespace Helpers.CSV
             Action<string> verboseLogAction = null, 
             Func<string,string> columnRenamer = null,
             Action<DataTable> tableValidator = null,
-            Expression<Func<DataRow, bool>> rowFilter = null)
+            Func<DataRow, bool> rowFilter = null)
         {
             verboseLogAction = verboseLogAction ?? new Action<string>((s) => { });
 

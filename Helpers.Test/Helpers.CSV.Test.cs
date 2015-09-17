@@ -50,7 +50,7 @@ namespace Helpers.CSV.Test
             
             for(int n = 0; n<Math.Min(res3.Table.Rows.Count, res0.Table.Rows.Count);n++)
                 for (int i = 0; i < Math.Min(res3.Table.Columns.Count, res0.Table.Columns.Count); i++)
-                    Assert.AreEqual(res0.Table.Rows[n][i].ToString(), res3.Table.Rows[n][i].ToString(), "Row data must equals");
+                    Assert.AreEqual(res0.Table.Rows[n][i].ToString(), res3.Table.Rows[n][i].ToString(), "Rows data must equals");
         }
 
         [TestMethod]
@@ -103,28 +103,24 @@ namespace Helpers.CSV.Test
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
-        public void HelperCSV_RowValidator()
+        public void HelperCSV_RowFilter()
         {
             var tableName = "test";
             var filePath = "{virtual}";
             var badColumn = "exception_column";
             var badData = "exception_data";
 
-            var validator0 = new Func<DataRow, bool>((row) =>
+            var filter0 = new Func<DataRow, bool>((row) =>
             {
-                foreach (var c in row.Table.Columns.OfType<DataColumn>())
-                    if (row[c].ToString().Contains(badData))
-                        throw new ArgumentException("row", string.Format("Table contains row with '{0}'", badData));
-                return true;
+                return false;
             });
 
-            var validator1 = new Func<DataRow, bool>((row) =>
+            var filter1 = new Func<DataRow, bool>((row) =>
             {
                 foreach (var c in row.Table.Columns.OfType<DataColumn>())
                     if (row[c].ToString().Contains(badData))
-                        throw new Exception(string.Format("Table contains row with '{0}'", badData));
-                return true;
+                        return true;
+                return false;
             });
 
             var sb = new List<string>();
@@ -133,27 +129,44 @@ namespace Helpers.CSV.Test
             rnd.Next();
 
             for (var i = 0; i < 10000; i++)
+            { 
                 sb.Add(string.Format("data{0};data{1};;data{2};", rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(0, 100)));
-
+            }
             sb.Add(string.Empty);
 
             var res0 = CSVFile.Load(
                 lines: sb,
                 tableName: tableName,
                 filePath: filePath,
-                verboseLogAction: (s) => Console.WriteLine(s),
-                rowFilter: (r) => validator0(r) );
+                verboseLogAction: (s) => Console.WriteLine(s), 
+                
+                rowFilter: filter0 );
 
             var sb1 = new List<string>();
             sb1.Add("test0_column;test_column;test_column;;" + badColumn);
-            sb1.Add("data0;data1;;data3;" + badData);
-            sb1.Add(string.Empty);
+            for (var i = 0; i < 10000; i++)
+                sb1.Add(string.Format("data{0};data{1};;data{2};", rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(0, 100)) + (i % 2 == 0 ? badData : "good_data") );
 
             var res1 = CSVFile.Load(lines: sb1,
                 tableName: tableName,
                 filePath: filePath,
-                verboseLogAction: (s) => Console.WriteLine(s),
-                rowFilter: (r) => validator1(r));
+                verboseLogAction: (s) =>
+                {
+                    Console.WriteLine(s);
+                    if (s.Contains("good_data"))
+                        throw new Exception("Good data filtered!");
+                },
+                rowFilter: filter1);
+
+            var tableColumns = res1.Table
+                    .Columns
+                    .OfType<DataColumn>()
+                    .Select(c => c.ColumnName)
+                    .ToArray();
+
+            var badCount = res1.Table.Rows.OfType<DataRow>().Count(dr => tableColumns.Any(c => dr[c].ToString().Contains(badData)));
+            Assert.AreEqual(10000 / 2, res1.Table.Rows.Count, "Filtered rows count must be 5000");
+            Assert.AreEqual(0, badCount, "Filtered bad rows count must be 0");
         }
 
         [TestMethod]
