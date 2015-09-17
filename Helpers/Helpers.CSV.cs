@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml;
@@ -59,7 +60,8 @@ namespace Helpers.CSV
             Action<string> verboseLogAction = null,
             Func<string, string> columnRenamer = null,
             Action<DataTable> tableValidator = null,
-            Action<DataRow> rowValidator = null)
+            Func<DataRow, bool> rowValidator = null,
+            Expression<Func<DataRow,bool>> rowValidationExpression = null)
         {
             if (lines == null)
                 throw new ArgumentNullException("lines");
@@ -73,7 +75,7 @@ namespace Helpers.CSV
             verboseLogAction = verboseLogAction ?? new Action<string>((s) => { });
             columnRenamer = columnRenamer ?? new Func<string, string>((s) => s);
             tableValidator = tableValidator ?? new Action<DataTable>((table) => { });
-            rowValidator = rowValidator ?? new Action<DataRow>((row) => { });
+            rowValidator = rowValidator ?? new Func<DataRow, bool>((row) => true);
 
             verboseLogAction(string.Format("start load. Total lines in lines array: '{0}'", lines.Count()));
 
@@ -89,51 +91,128 @@ namespace Helpers.CSV
 
             try
             {
-                foreach (var fields in lines.Select(l => GetCsvFields(l, delimiter).ToArray()))
+                var cnt = lines.Count();
+
+                var rows = Enumerable.Range(0, cnt)
+                    .AsParallel()
+                    .Select(i => new { Index = i, Line = lines.ElementAt(i) })
+                    .Select(i => new { i.Index, Fields = GetCsvFields(i.Line, delimiter).ToArray() });
+
+                var firstRow = rows.FirstOrDefault();
+                if (firstRow != null)
                 {
-                    bool needProceedRow = true;
-                    if (res.Table.Columns.Count == 0)
+                    #region Columns
+                    if (hasColumns)
                     {
-                        if (hasColumns)
-                        {
-                            verboseLogAction(string.Format("read columns"));
-                            res.Table.Columns.AddRange(
-                                Enumerable.Range(0, fields.Length)
-                                    .Select(i => new { ColumnName = fields[i], Index = i })                                
-                                    .Select(c => new { ColumnName = columnRenamer(c.ColumnName.ToLower().Trim()), c.Index })
-                                    .Select(c => new { ColumnName = string.IsNullOrWhiteSpace(c.ColumnName) ? "column" : c.ColumnName, c.Index })
-                                    .GroupBy(c => c.ColumnName)
-                                    .SelectMany(g => g.Select(i => new { ColumnName = i.ColumnName + ( g.Count() == 1 ? string.Empty : "_" + i.Index.ToString() ), Index = i.Index } ) )
-                                    .OrderBy(i => i.Index)
-                                    .Select(c => c.ColumnName)
-                                    .Select(c => new DataColumn(c, typeof(string)))
-                                    .ToArray()
-                                );
-                            needProceedRow = false;
-                        }
-                        else
-                        {
-                            verboseLogAction(string.Format("generate columns"));
-                            for (int i = 0; i < fields.Length; i++)
-                                res.Table.Columns.Add(string.Format("column_{0}", i), typeof(string));
-
-                        }
-                        verboseLogAction(string.Format("read columns done. columns count: '{0}'", res.Table.Columns.Count));
-                        verboseLogAction("validate table");
-                        tableValidator(res.Table);
-                        verboseLogAction("table validation done");
+                        verboseLogAction(string.Format("read columns"));
+                        res.Table.Columns.AddRange(
+                            Enumerable.Range(0, firstRow.Fields.Length)
+                                .Select(i => new { ColumnName = firstRow.Fields[i], Index = i })
+                                .Select(c => new { ColumnName = columnRenamer(c.ColumnName.ToLower().Trim()), c.Index })
+                                .Select(c => new { ColumnName = string.IsNullOrWhiteSpace(c.ColumnName) ? "column" : c.ColumnName, c.Index })
+                                .GroupBy(c => c.ColumnName)
+                                .SelectMany(g => g.Select(i => new { ColumnName = i.ColumnName + (g.Count() == 1 ? string.Empty : "_" + i.Index.ToString()), Index = i.Index }))
+                                .OrderBy(i => i.Index)
+                                .Select(c => c.ColumnName)
+                                .Select(c => new DataColumn(c, typeof(string)))
+                                .ToArray()
+                            );
                     }
-
-                    if (needProceedRow)
+                    else
                     {
-                        var row = res.Table.NewRow();
-                        for (int i = 0; i < Math.Min(fields.Length, res.Table.Columns.Count); i++)
-                            row[res.Table.Columns[i]] = fields[i];
-                        rowValidator(row);
-                        res.Table.Rows.Add(row);
+                        verboseLogAction(string.Format("generate columns"));
+                        for (int i = 0; i < firstRow.Fields.Length; i++)
+                            res.Table.Columns.Add(string.Format("column_{0}", i), typeof(string));
                     }
-                    res.ProcessedRowCount++;
+                    verboseLogAction(string.Format("read columns done. columns count: '{0}'", res.Table.Columns.Count));
+                    verboseLogAction("validate table");
+                    tableValidator(res.Table);
+                    verboseLogAction("table validation done");
+                    #endregion
+
+                    var dataRows = rows
+                        .Skip(hasColumns ? 1 : 0)
+                        .AsParallel()
+                        .Select(i =>
+                            {
+                                var row = res.Table.NewRow();
+                                for (int n = 0; n < Math.Min(i.Fields.Length, res.Table.Columns.Count); n++)
+                                    row[res.Table.Columns[n]] = i.Fields[n];
+                                return new { i.Fields, i.Index, Row = row, IsValid = rowValidator(row) };
+                            })
+                        .OrderBy(r => r.Index)
+                        .ToArray();
+
+                    foreach (var dr in dataRows.Where(r => !r.IsValid))
+                        verboseLogAction(string.Format("column validation error on index: {0}, row: '{1}'", dr.Index, lines.ElementAt(dr.Index)));
+
+                    var validRows = dataRows.Where(r => r.IsValid);
+                    foreach (var dr in validRows)
+                        res.Table.Rows.Add(dr.Row);
+
+                    res.ProcessedRowCount = validRows.Count() + (hasColumns ? 1 : 0);
                 }
+                else
+                    throw new Exception(Resource.Helpers_CSV_Load_NoOneRowFound);
+
+                //foreach (var fields in lines.Select(l => GetCsvFields(l, delimiter).ToArray()))
+                //{
+                //    #region Columns
+                //    bool needProceedRow = true;
+                //    if (res.Table.Columns.Count == 0)
+                //    {
+                //        if (hasColumns)
+                //        {
+                //            verboseLogAction(string.Format("read columns"));
+                //            res.Table.Columns.AddRange(
+                //                Enumerable.Range(0, fields.Length)
+                //                    .Select(i => new { ColumnName = fields[i], Index = i })                                
+                //                    .Select(c => new { ColumnName = columnRenamer(c.ColumnName.ToLower().Trim()), c.Index })
+                //                    .Select(c => new { ColumnName = string.IsNullOrWhiteSpace(c.ColumnName) ? "column" : c.ColumnName, c.Index })
+                //                    .GroupBy(c => c.ColumnName)
+                //                    .SelectMany(g => g.Select(i => new { ColumnName = i.ColumnName + ( g.Count() == 1 ? string.Empty : "_" + i.Index.ToString() ), Index = i.Index } ) )
+                //                    .OrderBy(i => i.Index)
+                //                    .Select(c => c.ColumnName)
+                //                    .Select(c => new DataColumn(c, typeof(string)))
+                //                    .ToArray()
+                //                );
+                //            needProceedRow = false;
+                //        }
+                //        else
+                //        {
+                //            verboseLogAction(string.Format("generate columns"));
+                //            for (int i = 0; i < fields.Length; i++)
+                //                res.Table.Columns.Add(string.Format("column_{0}", i), typeof(string));
+
+                //        }
+                //        verboseLogAction(string.Format("read columns done. columns count: '{0}'", res.Table.Columns.Count));
+                //        verboseLogAction("validate table");
+                //        tableValidator(res.Table);
+                //        verboseLogAction("table validation done");
+                //    }
+                //    #endregion
+
+                //    if (needProceedRow)
+                //    {
+                //        var row = res.Table.NewRow();
+                //        for (int i = 0; i < Math.Min(fields.Length, res.Table.Columns.Count); i++)
+                //            row[res.Table.Columns[i]] = fields[i];
+                        
+                //        try
+                //        { 
+                //            if (rowValidator(row))
+                //                res.Table.Rows.Add(row);
+                //        }
+                //        catch(Exception ex)
+                //        {
+                //            var e = new Exception("Row read exception. See inner exception for details", ex);
+                //            e.Data.Add("Exception thrown at line number", res.ProcessedRowCount);
+                //            e.Data.Add("Exception thrown at line", lines.ElementAt(res.ProcessedRowCount));
+                //            verboseLogAction(e.GetExceptionText());
+                //        }
+                //    }
+                //    res.ProcessedRowCount++;
+                //}
             }
             catch (Exception ex)
             {
@@ -171,7 +250,7 @@ namespace Helpers.CSV
             Action<string> verboseLogAction = null, 
             Func<string,string> columnRenamer = null,
             Action<DataTable> tableValidator = null,
-            Action<DataRow> rowValidator = null)
+            Func<DataRow, bool> rowValidator = null)
         {
             verboseLogAction = verboseLogAction ?? new Action<string>((s) => { });
 

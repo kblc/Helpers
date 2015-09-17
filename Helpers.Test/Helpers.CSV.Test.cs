@@ -75,7 +75,13 @@ namespace Helpers.CSV.Test
 
             var sb = new List<string>();
             sb.Add("test0_column;test_column;test_column;;");
-            sb.Add("data0;data1;;data3;");
+
+            var rnd = new Random(1);
+            rnd.Next();
+
+            for(var i=0; i < 1000; i++)
+                sb.Add(string.Format("data{0};data{1};;data{2};", rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(0, 100)));
+
             sb.Add(string.Empty);
 
             var res0 = CSVFile.Load(lines: sb.ToArray(),
@@ -105,18 +111,20 @@ namespace Helpers.CSV.Test
             var badColumn = "exception_column";
             var badData = "exception_data";
 
-            var validator0 = new Action<DataRow>((row) =>
+            var validator0 = new Func<DataRow, bool>((row) =>
             {
                 foreach (var c in row.Table.Columns.OfType<DataColumn>())
                     if (row[c].ToString().Contains(badData))
                         throw new ArgumentException("row", string.Format("Table contains row with '{0}'", badData));
+                return true;
             });
 
-            var validator1 = new Action<DataRow>((row) =>
+            var validator1 = new Func<DataRow, bool>((row) =>
             {
                 foreach (var c in row.Table.Columns.OfType<DataColumn>())
                     if (row[c].ToString().Contains(badData))
                         throw new Exception(string.Format("Table contains row with '{0}'", badData));
+                return true;
             });
 
             var sb = new List<string>();

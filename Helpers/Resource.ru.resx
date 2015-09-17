@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Helpers_CSV_Load_NoOneRowFound" xml:space="preserve">
+    <value>Ни одна строка не найдена в импортирумых данных</value>
+  </data>
   <data name="PercentageProgress_ValueMustBeMoreZeroAndLesstOneHundred" xml:space="preserve">
     <value>Значение должно быть в диапазоне от 0 до 100</value>
   </data>
