@@ -110,19 +110,6 @@ namespace Helpers.CSV.Test
             var badColumn = "exception_column";
             var badData = "exception_data";
 
-            var filter0 = new Func<DataRow, bool>((row) =>
-            {
-                return false;
-            });
-
-            var filter1 = new Func<DataRow, bool>((row) =>
-            {
-                foreach (var c in row.Table.Columns.OfType<DataColumn>())
-                    if (row[c].ToString().Contains(badData))
-                        return true;
-                return false;
-            });
-
             var sb = new List<string>();
             sb.Add("test0_column;test_column;test_column;;");
             var rnd = new Random(1);
@@ -140,11 +127,12 @@ namespace Helpers.CSV.Test
                 filePath: filePath,
                 verboseLogAction: (s) => Console.WriteLine(s), 
                 
-                rowFilter: filter0 );
+                rowFilter: r => false );
 
             var sb1 = new List<string>();
             sb1.Add("test0_column;test_column;test_column;;" + badColumn);
-            for (var i = 0; i < 10000; i++)
+            var cnt = 100000;
+            for (var i = 0; i < cnt; i++)
                 sb1.Add(string.Format("data{0};data{1};;data{2};", rnd.Next(0, 100), rnd.Next(0, 100), rnd.Next(0, 100)) + (i % 2 == 0 ? badData : "good_data") );
 
             var res1 = CSVFile.Load(lines: sb1,
@@ -156,7 +144,7 @@ namespace Helpers.CSV.Test
                     if (s.Contains("good_data"))
                         throw new Exception("Good data filtered!");
                 },
-                rowFilter: filter1);
+                rowFilter: row => row.Table.Columns.OfType<DataColumn>().Any(c => row[c].ToString().Contains(badData)));
 
             var tableColumns = res1.Table
                     .Columns
@@ -165,7 +153,7 @@ namespace Helpers.CSV.Test
                     .ToArray();
 
             var badCount = res1.Table.Rows.OfType<DataRow>().Count(dr => tableColumns.Any(c => dr[c].ToString().Contains(badData)));
-            Assert.AreEqual(10000 / 2, res1.Table.Rows.Count, "Filtered rows count must be 5000");
+            Assert.AreEqual(cnt / 2, res1.Table.Rows.Count, "Filtered rows count must be equals");
             Assert.AreEqual(0, badCount, "Filtered bad rows count must be 0");
         }
 
