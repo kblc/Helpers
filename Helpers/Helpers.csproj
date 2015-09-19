@@ -96,6 +96,8 @@
     <Compile Include="Helpers.cs" />
     <Compile Include="Helpers.CSV.cs" />
     <Compile Include="Helpers.Linq.cs" />
+    <Compile Include="Helpers.Log.cs" />
+    <Compile Include="Helpers.Log.Old.cs" />
     <Compile Include="Helpers.Serialization.cs" />
     <Compile Include="PercentageProgress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
