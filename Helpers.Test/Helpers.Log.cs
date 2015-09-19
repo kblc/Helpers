@@ -17,7 +17,7 @@ namespace Helpers.Test
         {
             var sessionName = "test session";
             var logList = new List<string>();
-            using (var log = Helpers.Log.Session(sessionName, s => logList.AddRange(s)))
+            using (var log = Helpers.Log.Session(sessionName, output: s => logList.AddRange(s)))
             {
                 log.Add("testData1");
                 Assert.AreEqual(0, logList.Count);
