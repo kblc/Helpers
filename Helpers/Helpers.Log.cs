@@ -199,6 +199,7 @@ namespace Helpers
         /// Add log message
         /// </summary>
         /// <param name="message"></param>
+        /// <param name="whereCathed">Where is message catched</param>
         public static void Add(string message, string whereCathed = null)
         {
             var formatedMessage = GetFormatedLogMessage(whereCathed == null ? message : string.Format(WhereCatchedFormat, whereCathed, message));
