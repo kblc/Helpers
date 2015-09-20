@@ -237,6 +237,13 @@ namespace Helpers
                     }
         }
 
+        /// <summary>
+        /// Create log session. Log collected in session and flush on session dispose (if enabled)
+        /// </summary>
+        /// <param name="sessionName">Log session name</param>
+        /// <param name="isEnabled">Is session flush enabled for default</param>
+        /// <param name="output">Override log output if need</param>
+        /// <returns>Disposable session</returns>
         public static SessionInfo Session(string sessionName = "", bool isEnabled = true, Action<IEnumerable<string>> output = null)
         {
             return new SessionInfo(sessionName, isEnabled, output ?? WriteToLogOutput);
