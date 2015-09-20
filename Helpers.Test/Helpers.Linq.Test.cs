@@ -26,5 +26,17 @@ namespace Helpers.Test
             Assert.AreEqual(3, cnt1, "All strings must not equals by second character");
             Assert.AreEqual(3, cnt2, "All strings must not equals by third character becase we not disable to use hash");
         }
+
+        [TestMethod]
+        public void GenericComperer_Compare()
+        {
+            var strs = new string[] { "a", "aa", "aaa" };
+            // Descending sort by length
+            var gcc = new GenericComperer<string>(i => 100 - i.Length);
+            var resArray = strs.OrderBy(s => s, gcc).ToArray();
+            Assert.AreEqual(strs[2], resArray[0], "Items must equals");
+            Assert.AreEqual(strs[1], resArray[1], "Items must equals");
+            Assert.AreEqual(strs[0], resArray[2], "Items must equals");
+        }
     }
 }

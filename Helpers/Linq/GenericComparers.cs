@@ -105,7 +105,7 @@ namespace Helpers.Linq
             { 
                 var first = expr.Invoke(x);
                 var sec = expr.Invoke(y);
-                return (first != null ? first.CompareTo(y) : (sec != null ? sec.CompareTo(first) : int.MaxValue));
+                return (first != null ? first.CompareTo(sec) : (sec != null ? sec.CompareTo(first) : int.MaxValue));
             }
             catch(Exception ex)
             {
