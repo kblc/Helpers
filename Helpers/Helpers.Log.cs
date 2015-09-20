@@ -16,16 +16,37 @@ namespace Helpers
     /// </summary>
     public static class Log
     {
+        /// <summary>
+        /// Session information class
+        /// </summary>
         public class SessionInfo : IDisposable
         {
-            public readonly DateTime SessionStart = DateTime.Now;
             private DateTime PartStart = DateTime.Now;
-            public readonly string SessionName = string.Empty;
             private readonly List<string> log = new List<string>();
             private readonly Action<IEnumerable<string>> Output = null;
+
+            /// <summary>
+            /// Session start
+            /// </summary>
+            public readonly DateTime SessionStart = DateTime.Now;
+
+            /// <summary>
+            /// Session name
+            /// </summary>
+            public readonly string SessionName = string.Empty;
+
+            /// <summary>
+            /// Is log write enabled
+            /// </summary>
             public bool Enabled { get; set; }
 
-            public SessionInfo(string sessionName = "", bool isEnabled = true, Action<IEnumerable<string>> output = null)
+            /// <summary>
+            /// Create new instance
+            /// </summary>
+            /// <param name="sessionName">Session name</param>
+            /// <param name="isEnabled">Is log write enabled by default</param>
+            /// <param name="output">Output log action</param>
+            internal SessionInfo(string sessionName = "", bool isEnabled = true, Action<IEnumerable<string>> output = null)
             {
                 SessionName = sessionName;
                 Output = output ?? new Action<IEnumerable<string>>((s) => { });
@@ -60,9 +81,19 @@ namespace Helpers
                     log.Clear();
             }
 
+            /// <summary>
+            /// Total elapsed time
+            /// </summary>
             public TimeSpan TotalElapsed { get { return (DateTime.Now - SessionStart); } }
+
+            /// <summary>
+            /// Last part elapsed time
+            /// </summary>
             public TimeSpan PartElapsed { get { return (DateTime.Now - PartStart); } }
 
+            /// <summary>
+            /// Write log elapsed part time and start new part
+            /// </summary>
             public void LogElapsed()
             {
                 Add(string.Format("### part elapsed: {0} ms", PartElapsed.TotalMilliseconds));
@@ -74,13 +105,11 @@ namespace Helpers
                 Add(string.Format("### total elapsed: {0} ms", TotalElapsed.TotalMilliseconds));
             }
 
-            public event EventHandler OnDispose;
+            /// <summary>
+            /// Dispose log session and flush write log if enabled
+            /// </summary>
             public void Dispose()
             {
-                var e = OnDispose;
-                if (e != null)
-                    e(this, new EventArgs());
-
                 if (Enabled && log.Count > 0)
                 {
                     log.Insert(0, "B#########################################################");
