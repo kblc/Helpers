@@ -93,6 +93,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Helpers.Linq.Test.cs" />
     <Compile Include="Helpers.Log.cs" />
     <Compile Include="Helpers.Serialization.Test.cs" />
     <Compile Include="Helpers.CSV.Test.cs" />
