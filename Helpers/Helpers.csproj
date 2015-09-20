@@ -95,7 +95,8 @@
     <Compile Include="Helpers.ConcurrencyObjects.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Helpers.CSV.cs" />
-    <Compile Include="Helpers.Linq.cs" />
+    <Compile Include="Linq\GenericCompare.cs" />
+    <Compile Include="Linq\JoinedEnumerable.cs" />
     <Compile Include="Helpers.Log.cs" />
     <Compile Include="Helpers.Log.Old.cs" />
     <Compile Include="Helpers.Serialization.cs" />
