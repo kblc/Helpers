@@ -38,5 +38,18 @@ namespace Helpers.Test
             Assert.AreEqual(strs[1], resArray[1], "Items must equals");
             Assert.AreEqual(strs[0], resArray[2], "Items must equals");
         }
+
+        [TestMethod]
+        public void ConcatExtension_Concat()
+        {
+            var str1 = "123";
+            var str2 = "456";
+            var str3 = "789";
+            var res0 = new string[] { str1, str2, str3 }.Concat(i => i);
+            Assert.AreEqual(str1+ str2+ str3, res0);
+
+            var res1 = new string[] { str1, str2, str3 }.Concat(i => i, ";");
+            Assert.AreEqual(str1 + ";" + str2 + ";" + str3, res1);
+        }
     }
 }
