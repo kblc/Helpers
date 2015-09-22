@@ -42,7 +42,8 @@ namespace Helpers
         private object childLocks = new Object();
         private List<PercentageProgress> childs = new List<PercentageProgress>();
 
-        private decimal value = 0m;
+        private const decimal defaultValue = 0m;
+        private decimal value = defaultValue;
         /// <summary>
         /// Get or set current percentage value for this part (from 0 to 100)
         /// </summary>
@@ -94,7 +95,8 @@ namespace Helpers
             }
         }
 
-        private decimal weight = 1m;
+        private const decimal defaultWeight = 1m;
+        private decimal weight = defaultWeight;
         /// <summary>
         /// Get or set weight for child node (default = 1)
         /// </summary>
@@ -112,10 +114,11 @@ namespace Helpers
         /// Get new child with default value
         /// </summary>
         /// <param name="value">Percentage value for new child</param>
+        /// <param name="weight">Percentage item weight for parent item</param>
         /// <returns>Child with default value for this item</returns>
-        public PercentageProgress GetChild(decimal value = 0m)
+        public PercentageProgress GetChild(decimal value = defaultValue, decimal weight = defaultWeight)
         {
-            PercentageProgress result = new PercentageProgress() { Value = value };
+            PercentageProgress result = new PercentageProgress() { Value = value, Weight = weight };
             result.Change += child_Change;
             lock (childLocks)
             {
