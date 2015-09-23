@@ -23,7 +23,21 @@ namespace Helpers
         {
             private DateTime PartStart = DateTime.Now;
             private readonly List<string> log = new List<string>();
-            private readonly Action<IEnumerable<string>> Output = null;
+
+            private Action<IEnumerable<string>> output = null;
+            public Action<IEnumerable<string>> Output
+            {
+                private get
+                {
+                    return output;
+                }
+                set
+                {
+                    if (value == null)
+                        throw new ArgumentNullException(nameof(Output));
+                    output = value;
+                }
+            }
 
             /// <summary>
             /// Session start
@@ -49,7 +63,7 @@ namespace Helpers
             internal SessionInfo(string sessionName = "", bool isEnabled = true, Action<IEnumerable<string>> output = null)
             {
                 SessionName = sessionName;
-                Output = output ?? new Action<IEnumerable<string>>((s) => { });
+                this.output = output ?? new Action<IEnumerable<string>>((s) => { });
                 Enabled = isEnabled;
             }
 
