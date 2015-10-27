@@ -123,6 +123,56 @@ namespace Helpers
         /// <typeparam name="toType">Type of destination object</typeparam>
         /// <param name="from">Source object</param>
         /// <param name="to">Destincation object</param>
+        public static void CopyObjectTo<fromType, toType>(this fromType from, toType to)
+        {
+            CopyObject<fromType, toType>(from, to, new string[] { });
+        }
+
+        /// <summary>
+        /// Copy object properties from selected item to destination object. <br/>Object can be <b>not similar</b> types.
+        /// </summary>
+        /// <typeparam name="fromType">Type of source object</typeparam>
+        /// <typeparam name="toType">Type of destination object</typeparam>
+        /// <param name="from">Source object</param>
+        /// <param name="to">Destincation object</param>
+        public static void CopyObjectFrom<fromType, toType>(this toType to, fromType from)
+        {
+            CopyObject<fromType, toType>(from, to, new string[] { });
+        }
+
+        /// <summary>
+        /// Copy object properties from selected item to destination object. <br/>Object can be <b>not similar</b> types.
+        /// </summary>
+        /// <typeparam name="fromType">Type of source object</typeparam>
+        /// <typeparam name="toType">Type of destination object</typeparam>
+        /// <param name="from">Source object</param>
+        /// <param name="to">Destincation object</param>
+        /// <param name="excludePropertyes">Exclude some property names. Items can use LIKE syntax (ex: '*name*' or 'param*')</param>
+        public static void CopyObjectTo<fromType, toType>(this fromType from, toType to, string[] excludePropertyes)
+        {
+            CopyObject<fromType, toType>(from, to, excludePropertyes);
+        }
+
+        /// <summary>
+        /// Copy object properties from selected item to destination object. <br/>Object can be <b>not similar</b> types.
+        /// </summary>
+        /// <typeparam name="fromType">Type of source object</typeparam>
+        /// <typeparam name="toType">Type of destination object</typeparam>
+        /// <param name="from">Source object</param>
+        /// <param name="to">Destincation object</param>
+        /// <param name="excludePropertyes">Exclude some property names. Items can use LIKE syntax (ex: '*name*' or 'param*')</param>
+        public static void CopyObjectFrom<fromType, toType>(this toType to, fromType from, string[] excludePropertyes)
+        {
+            CopyObject<fromType, toType>(from, to, excludePropertyes);
+        }
+
+        /// <summary>
+        /// Copy object properties from selected item to destination object. <br/>Object can be <b>not similar</b> types.
+        /// </summary>
+        /// <typeparam name="fromType">Type of source object</typeparam>
+        /// <typeparam name="toType">Type of destination object</typeparam>
+        /// <param name="from">Source object</param>
+        /// <param name="to">Destincation object</param>
         /// <param name="excludePropertyes">Exclude some property names. Items can use LIKE syntax (ex: '*name*' or 'param*')</param>
         public static void CopyObject<fromType, toType>(this fromType from, toType to, string[] excludePropertyes)
         {
@@ -134,23 +184,38 @@ namespace Helpers
                 .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
                 .Where(pi => pi.CanWrite && !excludePropertyes.Any(ep => pi.Name.Like(ep) ))
                 .ToArray();
+
             var piFromItems = 
                 typeof(fromType)
                 .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
                 .ToArray();
 
-            foreach (var piTo in piToItems)
-            {
-                var piFrom = piFromItems.FirstOrDefault(p => p.Name == piTo.Name);
-                if (piFrom != null)
+            var items = piToItems
+                .Join(piFromItems, t => t.Name, f => f.Name, (t, f) => new { From = f, To = t });
+
+            foreach (var pi in items)
+                try
                 {
-                    object value = piFrom.GetValue(from, null);
+                    object value = pi.From.GetValue(from, null);
                     if (value == null)
-                        piTo.SetValue(to, value, null);
+                        pi.To.SetValue(to, value, null);
                     else
-                        piTo.SetValue(to, System.Convert.ChangeType(value, piTo.PropertyType), null);
+                    {
+                        try
+                        {
+                            pi.To.SetValue(to, value, null);
+                        }
+                        catch
+                        {
+                            pi.To.SetValue(to, System.Convert.ChangeType(value, pi.To.PropertyType), null);
+                        }
+                    }
                 }
-            }
+                catch(Exception ex)
+                {
+                    var e = new Exception(string.Format("Error converting property '{0}' ('{1}') to '{2}' ('{3}')", pi.From.Name, pi.From.PropertyType, pi.To.Name, pi.To.PropertyType), ex);
+                    throw e;
+                }
         }
 
         /// <summary>
