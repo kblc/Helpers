@@ -73,7 +73,10 @@ namespace Helpers
             /// <param name="message"></param>
             public void Add(string message, string whereCathed = null)
             {
-                log.Add(whereCathed == null ? message : string.Format(WhereCatchedFormat, whereCathed, message));
+                lock(log)
+                { 
+                    log.Add(whereCathed == null ? message : string.Format(WhereCatchedFormat, whereCathed, message));
+                }
             }
 
             /// <summary>
