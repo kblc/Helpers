@@ -15,7 +15,7 @@ namespace Helpers.CSV
     /// <summary>
     /// Helper for work with CSV file
     /// </summary>
-    public class CSVFile
+    public class CSVFile : IDisposable
     {
         #region Result fields
         /// <summary>
@@ -489,5 +489,31 @@ namespace Helpers.CSV
 
             return result;
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    if (this.Table != null)
+                    {
+                        Table.Dispose();
+                        Table = null;
+                    }
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
     }
 }
