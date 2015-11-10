@@ -111,9 +111,9 @@ namespace Helpers
         /// <typeparam name="toType">Type of destination object</typeparam>
         /// <param name="from">Source object</param>
         /// <param name="to">Destincation object</param>
-        public static void CopyObject<fromType, toType>(this fromType from, toType to)
+        public static Notification CopyObject<fromType, toType>(this fromType from, toType to)
         {
-            CopyObject<fromType, toType>(from, to, new string[] { });
+            return CopyObject<fromType, toType>(from, to, new string[] { });
         }
 
         /// <summary>
@@ -123,9 +123,9 @@ namespace Helpers
         /// <typeparam name="toType">Type of destination object</typeparam>
         /// <param name="from">Source object</param>
         /// <param name="to">Destincation object</param>
-        public static void CopyObjectTo<fromType, toType>(this fromType from, toType to)
+        public static Notification CopyObjectTo<fromType, toType>(this fromType from, toType to)
         {
-            CopyObject<fromType, toType>(from, to, new string[] { });
+            return CopyObject<fromType, toType>(from, to, new string[] { });
         }
 
         /// <summary>
@@ -135,22 +135,9 @@ namespace Helpers
         /// <typeparam name="toType">Type of destination object</typeparam>
         /// <param name="from">Source object</param>
         /// <param name="to">Destincation object</param>
-        public static void CopyObjectFrom<fromType, toType>(this toType to, fromType from)
+        public static Notification CopyObjectFrom<fromType, toType>(this toType to, fromType from)
         {
-            CopyObject<fromType, toType>(from, to, new string[] { });
-        }
-
-        /// <summary>
-        /// Copy object properties from selected item to destination object. <br/>Object can be <b>not similar</b> types.
-        /// </summary>
-        /// <typeparam name="fromType">Type of source object</typeparam>
-        /// <typeparam name="toType">Type of destination object</typeparam>
-        /// <param name="from">Source object</param>
-        /// <param name="to">Destincation object</param>
-        /// <param name="excludePropertyes">Exclude some property names. Items can use LIKE syntax (ex: '*name*' or 'param*')</param>
-        public static void CopyObjectTo<fromType, toType>(this fromType from, toType to, string[] excludePropertyes)
-        {
-            CopyObject<fromType, toType>(from, to, excludePropertyes);
+            return CopyObject<fromType, toType>(from, to, new string[] { });
         }
 
         /// <summary>
@@ -161,9 +148,9 @@ namespace Helpers
         /// <param name="from">Source object</param>
         /// <param name="to">Destincation object</param>
         /// <param name="excludePropertyes">Exclude some property names. Items can use LIKE syntax (ex: '*name*' or 'param*')</param>
-        public static void CopyObjectFrom<fromType, toType>(this toType to, fromType from, string[] excludePropertyes)
+        public static Notification CopyObjectTo<fromType, toType>(this fromType from, toType to, string[] excludePropertyes)
         {
-            CopyObject<fromType, toType>(from, to, excludePropertyes);
+            return CopyObject<fromType, toType>(from, to, excludePropertyes);
         }
 
         /// <summary>
@@ -174,10 +161,27 @@ namespace Helpers
         /// <param name="from">Source object</param>
         /// <param name="to">Destincation object</param>
         /// <param name="excludePropertyes">Exclude some property names. Items can use LIKE syntax (ex: '*name*' or 'param*')</param>
-        public static void CopyObject<fromType, toType>(this fromType from, toType to, string[] excludePropertyes)
+        /// <returns>Notifications</returns>
+        public static Notification CopyObjectFrom<fromType, toType>(this toType to, fromType from, string[] excludePropertyes)
         {
+            return CopyObject<fromType, toType>(from, to, excludePropertyes);
+        }
+
+        /// <summary>
+        /// Copy object properties from selected item to destination object. <br/>Object can be <b>not similar</b> types.
+        /// </summary>
+        /// <typeparam name="fromType">Type of source object</typeparam>
+        /// <typeparam name="toType">Type of destination object</typeparam>
+        /// <param name="from">Source object</param>
+        /// <param name="to">Destincation object</param>
+        /// <param name="excludePropertyes">Exclude some property names. Items can use LIKE syntax (ex: '*name*' or 'param*')</param>
+        /// <returns>Notifications</returns>
+        public static Notification CopyObject<fromType, toType>(this fromType from, toType to, string[] excludePropertyes)
+        {
+            var res = new Notification();
+
             if (from == null || to == null)
-                return;
+                return res;
 
             var piToItems = 
                 typeof(toType)
@@ -197,6 +201,7 @@ namespace Helpers
                 try
                 {
                     object value = pi.From.GetValue(from, null);
+
                     if (value == null)
                         pi.To.SetValue(to, value, null);
                     else
@@ -214,19 +219,20 @@ namespace Helpers
                 catch(Exception ex)
                 {
                     var e = new Exception(string.Format("Error converting property '{0}' ('{1}') to '{2}' ('{3}')", pi.From.Name, pi.From.PropertyType, pi.To.Name, pi.To.PropertyType), ex);
-                    throw e;
+                    res.AddNotification(ex.GetExceptionText());
                 }
+            return res;
         }
 
         /// <summary>
         /// Get attribute for enumeration value.
         /// </summary>
         /// <typeparam name="T">Attribute type to select</typeparam>
-        /// <typeparam name="Expected">Expected value type (e.g. string)</typeparam>
+        /// <typeparam name="TExpected">Expected value type (e.g. string)</typeparam>
         /// <param name="enumeration">Enumeration type</param>
         /// <param name="expression">Selective expression</param>
         /// <returns>Attribute value for scpecified enum value</returns>
-        public static Expected GetAttributeValue<T, Expected>(this Enum enumeration, Func<T, Expected> expression)
+        public static TExpected GetAttributeValue<T, TExpected>(this Enum enumeration, Func<T, TExpected> expression)
         where T : Attribute
         {
             T attribute =
@@ -240,7 +246,7 @@ namespace Helpers
                 .SingleOrDefault();
 
             if (attribute == null)
-                return default(Expected);
+                return default(TExpected);
 
             return expression(attribute);
         }
