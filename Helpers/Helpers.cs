@@ -219,7 +219,7 @@ namespace Helpers
                 catch(Exception ex)
                 {
                     var e = new Exception(string.Format("Error converting property '{0}' ('{1}') to '{2}' ('{3}')", pi.From.Name, pi.From.PropertyType, pi.To.Name, pi.To.PropertyType), ex);
-                    res.AddNotification(ex.GetExceptionText());
+                    res.AddNotification(e.GetExceptionText());
                 }
             return res;
         }
