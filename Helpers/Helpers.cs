@@ -183,14 +183,12 @@ namespace Helpers
             if (from == null || to == null)
                 return res;
 
-            var piToItems = 
-                typeof(toType)
+            var piToItems = to.GetType()
                 .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
                 .Where(pi => pi.CanWrite && !excludePropertyes.Any(ep => pi.Name.Like(ep) ))
                 .ToArray();
 
-            var piFromItems = 
-                typeof(fromType)
+            var piFromItems = from.GetType()
                 .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
                 .ToArray();
 
